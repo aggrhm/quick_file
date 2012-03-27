@@ -22,13 +22,28 @@ module QuickFile
       def add_style(style_name, blk)
         processes[style_name.to_s] = {:blk => blk}
       end
+			def quick_file_mongo_keys!
+        key :sta, Integer    # state
+        key :orf, String    # original filename
+        key :sty, Hash      # styles
+        key :sto, String, :default => "s3"    # storage
+        key :oty, String    # owner type
+        key :oid, ObjectId  # owner id
+        key :err, Array     # errors
+
+        attr_alias :state, :sta
+        attr_alias :original_filename, :orf
+        attr_alias :styles, :sty
+        attr_alias :storage_type, :sto
+        attr_alias :errors, :err
+        attr_alias :owner_type, :oty
+			end
     end
 
     module InstanceMethods
-      def initialize
-        @file = nil
-        styles = {}
-        errors = []
+      def owner=(obj)
+        self.oty = obj.class.to_s
+        self.oid = obj.id
       end
 
       def uploaded_file=(uf)
@@ -254,7 +269,16 @@ module QuickFile
         end
         self.state = STATES[:deleted]
       end
+
+      def url_hash
+        ret = {}
+        @@processes.keys.each do |style_name|
+          ret[style_name] = self.url(style_name.to_sym)
+        end
+      end
+      
     end
 
   end
 end
+
