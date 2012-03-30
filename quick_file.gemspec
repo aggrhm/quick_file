@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
 
 	s.add_dependency "rmagick"
 	s.add_dependency "fog"
-	s.add_dependency "active_support"
+	s.add_dependency "mime-types"
 
   # specify any dependencies here; for example:
   # s.add_development_dependency "rspec"

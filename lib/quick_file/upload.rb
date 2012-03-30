@@ -272,9 +272,10 @@ module QuickFile
 
       def url_hash
         ret = {}
-        @@processes.keys.each do |style_name|
+        processes.keys.each do |style_name|
           ret[style_name] = self.url(style_name.to_sym)
         end
+				ret
       end
       
     end

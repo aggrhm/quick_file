@@ -1,5 +1,7 @@
 require "quick_file/version"
 require "quick_file/upload"
+require "mime/types"
+require "fog"
 require "RMagick"
 
 module QuickFile
@@ -11,7 +13,7 @@ module QuickFile
     end
 
     def options
-      @@options ||= UPLOAD_OPTIONS
+      @@options ||= {}
     end
 
     def generate_cache_name(ext)
