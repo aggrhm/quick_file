@@ -112,7 +112,7 @@ module QuickFile
       def process!
         return unless cached?
         self.state = STATES[:processing]
-        save
+        self.save
         begin
           puts "#{processes.size} processes"
           processes.each do |style_name, opts|
@@ -128,7 +128,7 @@ module QuickFile
             end
           end
           self.state = STATES[:processed]
-        rescue StandardError => e
+        rescue Exception => e
           puts e.message
           self.errors << "PROCESS: #{e.message}"
           self.state = STATES[:error]
