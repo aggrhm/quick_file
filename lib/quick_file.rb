@@ -31,7 +31,7 @@ module QuickFile
     end
 
     def is_video_file?(filename)
-      filename.downcase.end_with?('.mov', '.3gp', '.wmv', '.m4v', '.mp4')
+      filename.downcase.end_with?('.mov', '.3gp', '.wmv', '.m4v', '.mp4', '.flv')
     end
 
     def fog_connection
@@ -72,6 +72,24 @@ module QuickFile
       nim.write outfile
       outfile
     end
+
+		def convert_video_to_mp4(file)
+      new_file = QuickFile.new_cache_file(".mp4")
+      `ffmpeg -i #{file} -vcodec libx264 -b 500k -bt 50k -acodec libfaac -ab 56k -ac 2 -s 480x320 #{new_file}`
+			new_file
+		end
+
+		def convert_video_to_flv(file)
+      new_file = QuickFile.new_cache_file(".flv")
+      `ffmpeg -i #{file} -f flv -ar 11025 -r 24 -s 480x320 #{new_file}`
+			new_file
+		end
+
+		def create_video_thumb(file)
+      new_file = QuickFile.new_cache_file(".jpg")
+      `ffmpeg -i #{file} #{new_file}`
+			new_file
+		end
 
     def cache_path(cn)
       File.join(CACHE_DIR, cn)

@@ -11,6 +11,7 @@ module QuickFile
     #     3. store
 
     STATES = {:loaded => 0, :cached => 1, :processing => 2, :processed => 3, :storing => 4, :stored => 5, :deleted => 6, :error => 7}
+		FILE_CATEGORIES = {:none => 0, :image => 1, :video => 2, :file => 3}
 
     included do
       cattr_accessor :processes
@@ -261,14 +262,27 @@ module QuickFile
         "#{proto}#{QuickFile.host_url[storage_type.to_sym]}#{styles[style_name]["path"]}"
       end
 
-      def delete
+      def delete_files
         # delete uploaded files
         styles.each do |k,v|
           QuickFile.fog_directory.files.new(:key => v["path"]).destroy if v["path"]
           File.delete(v["cache"]) if (v["cache"] && File.exists?(v["cache"]))
         end
         self.state = STATES[:deleted]
+				save
       end
+
+			def file_category
+				if self.state.nil?
+					return FILE_CATEGORIES[:none]
+				elsif self.is_image?
+					return FILE_CATEGORIES[:image]
+				elsif self.is_video?
+					return FILE_CATEGORIES[:video]
+				else
+					return FILE_CATEGORIES[:file]
+				end
+			end
 
       def url_hash
         ret = {}
