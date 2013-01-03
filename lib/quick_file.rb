@@ -1,15 +1,21 @@
 require "quick_file/version"
+require "quick_file/storage"
 require "quick_file/upload"
 require "mime/types"
-require "fog"
 require "RMagick"
 
 module QuickFile
   CACHE_DIR = "/tmp"
+  STORAGE_TYPES = {:local => 1, :aws => 2, :ceph => 3}
 
   class << self
-    def configure
-      yield options if block_given?
+    def configure(opt=nil)
+      if block_given?
+        yield options
+      else
+        # handle hash
+        options.merge! opt.recursive_symbolize_keys!
+      end
     end
 
     def options
@@ -34,17 +40,19 @@ module QuickFile
       filename.downcase.end_with?('.mov', '.3gp', '.wmv', '.m4v', '.mp4', '.flv')
     end
 
-    def fog_connection
-      @@fog_connection ||= begin
-        Fog::Storage.new(options[:fog_credentials])
+    def storage
+      @@storage ||= begin
+        storage = QuickFile::Storage.new(options[:connection])
+        storage.set_bucket(options[:directory])
+        storage
       end
     end
 
     def fog_directory
       @@fog_directory ||= begin
           fog_connection.directories.new(
-          :key => options[:fog_directory],
-          :public => options[:fog_public]
+          :key => options[:fog][:directory],
+          :public => options[:fog][:public]
         )
       end
     end
@@ -52,7 +60,8 @@ module QuickFile
     def host_url
       @@host_url ||= begin
         {
-          :s3 => "s3.amazonaws.com/#{options[:fog_directory]}/"
+          1 => "#{options[:fog][:connection][:local_root]}/#{options[:fog][:directory]}/",
+          2 => "https://s3.amazonaws.com/#{options[:fog][:directory]}/"
         }
       end
     end
@@ -96,9 +105,11 @@ module QuickFile
     end
 
     def download(url, to)
-      out = open(to, "wb")
-      out.write(open(url).read)
-      out.close
+      File.open(to, "wb") do |saved_file|
+        open(url, "rb") do |read_file|
+          saved_file.write(read_file.read)
+        end
+      end
     end
 
     def image_from_url(url)
@@ -112,3 +123,15 @@ module QuickFile
   end
 
 end
+
+class Hash
+  def recursive_symbolize_keys!
+    symbolize_keys!
+    # symbolize each hash in .values
+    values.each{|h| h.recursive_symbolize_keys! if h.is_a?(Hash) }
+    # symbolize each hash inside an array in .values
+    values.select{|v| v.is_a?(Array) }.flatten.each{|h| h.recursive_symbolize_keys! if h.is_a?(Hash) }
+    self
+  end
+end
+
