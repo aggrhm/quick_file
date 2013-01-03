@@ -9,12 +9,13 @@ module QuickFile
       if @provider == :local
         # prepare for local storage access
       else
-        AWS::S3::Base.establish_connection!(
-                :server            => @options[:server],
-                :use_ssl           => @options[:use_ssl],
-                :access_key_id     => @options[:access_key_id],
-                :secret_access_key => @options[:secret_access_key]
-        )
+        conn_opts = {
+          :server            => @options[:server],
+          :access_key_id     => @options[:access_key_id],
+          :secret_access_key => @options[:secret_access_key]
+        }
+        conn_opts[:use_ssl] = @options[:use_ssl] if @options[:use_ssl]
+        AWS::S3::Base.establish_connection!(conn_opts)
       end
             
     end
