@@ -11,7 +11,7 @@ module QuickFile
       else
         AWS::S3::Base.establish_connection!(
                 :server            => @options[:server],
-                :use_ssl           => true,
+                :use_ssl           => @options[:use_ssl],
                 :access_key_id     => @options[:access_key_id],
                 :secret_access_key => @options[:secret_access_key]
         )
