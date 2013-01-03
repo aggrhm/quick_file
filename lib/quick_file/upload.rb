@@ -317,6 +317,10 @@ module QuickFile
       QuickFile.storage.download(self.path(style_name), to_file)
     end
 
+    def value(style_name)
+      QuickFile.storage.value(self.path(style_name))
+    end
+
     def delete_files
       # delete uploaded files
       styles.each do |k,v|

@@ -68,6 +68,14 @@ module QuickFile
       end
     end
 
+    def value(key)
+      if is_provider? [:ceph, :s3]
+        return AWS::S3::S3Object.value(key, @bucket_name)
+      elsif is_provider? [:local]
+        File.open(local_path(key)).read
+      end
+    end
+
     def local_path(key)
       File.join(@options[:local_root], @bucket_name, key)
     end
