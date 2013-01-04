@@ -75,6 +75,14 @@ module QuickFile
       save
     end
 
+    def local_file=(fn)
+      self.error_log = []
+      @local_file = fn
+      self.original_filename = fn.split('/').last
+      self.state! :loaded
+      cache!
+    end
+
     def load_from_string(str, name)
       self.error_log = []
       @string_file = str
@@ -110,6 +118,8 @@ module QuickFile
       elsif @linked_url
         # download file to 
         cp = download_cache_file(QuickFile.generate_cache_name(extension), @linked_url)
+      elsif @local_file
+        cp = copy_cache_file(QuickFile.generate_cache_name(extension), @local_file)
       elsif @string_file
         cp = write_to_cache_file(QuickFile.generate_cache_name(extension), @string_file)
       end
@@ -136,6 +146,13 @@ module QuickFile
       Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
       cp = QuickFile.cache_path(cn)
       File.open(cp, "wb") { |f| f.write(file.read) }
+      return cp
+    end
+
+    def copy_cache_file(cn, fn)
+      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
+      cp = QuickFile.cache_path(cn)
+      FileUtils.copy(fn, cp)
       return cp
     end
 
