@@ -59,7 +59,6 @@ module QuickFile
         open(to_file, 'w') do |file|
           val = AWS::S3::S3Object.value(key, @bucket_name)
           file.write(val)
-          end
         end
       elsif is_provider? [:local]
         open(to_file, 'w') do |file|
