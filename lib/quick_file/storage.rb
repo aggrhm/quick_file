@@ -56,9 +56,10 @@ module QuickFile
 
     def download(key, to_file)
       if is_provider? [:ceph, :s3]
-        open(to_file, 'w') do |file|
-          val = AWS::S3::S3Object.value(key, @bucket_name)
-          file.write(val)
+        open(to_file, 'wb') do |file|
+          AWS::S3::S3Object.stream(key, @bucket_name) do |chunk|
+            file.write(chunk)
+          end
         end
       elsif is_provider? [:local]
         open(to_file, 'w') do |file|
