@@ -28,10 +28,7 @@ module QuickFile
       @bucket_name = bucket
 
       if is_provider? [:ceph, :s3]
-        bucket = AWS::S3::Bucket.find('my-new-bucket')
-        if bucket.nil?
-          AWS::S3::Bucket.create('my-new-bucket')
-        end
+        AWS::S3::Bucket.create(@bucket_name)
       end
     end
 
