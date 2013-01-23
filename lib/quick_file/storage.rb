@@ -13,10 +13,11 @@ module QuickFile
       else
         conn_opts = {
           :s3_endpoint       => @options[:host],
+          :s3_port       => ( @options[:use_ssl] ? 443 : 80 ),
           :access_key_id     => @options[:access_key_id],
           :secret_access_key => @options[:secret_access_key]
         }
-        conn_opts[:use_ssl] = @options[:use_ssl] if @options[:use_ssl]
+        #conn_opts[:use_ssl] = @options[:use_ssl] if @options[:use_ssl]
         @interface = AWS::S3.new(conn_opts)
       end
             
