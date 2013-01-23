@@ -27,6 +27,10 @@ module QuickFile
       types.include? @provider
     end
 
+    def interface
+      @interface
+    end
+
     def set_bucket(bucket)
       @bucket_name = bucket
 
