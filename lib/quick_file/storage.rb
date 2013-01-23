@@ -1,21 +1,23 @@
-require 'aws/s3'
+require 'aws-sdk'
 
 module QuickFile
   class Storage
     def initialize(opts)
       @options = opts
       @provider = @options[:provider].to_sym
+      @interface = nil
+      @bucket = nil
 
       if @provider == :local
         # prepare for local storage access
       else
         conn_opts = {
-          :server            => @options[:server],
+          :s3_endpoint       => @options[:host],
           :access_key_id     => @options[:access_key_id],
           :secret_access_key => @options[:secret_access_key]
         }
         conn_opts[:use_ssl] = @options[:use_ssl] if @options[:use_ssl]
-        AWS::S3::Base.establish_connection!(conn_opts)
+        @interface = AWS::S3.new(conn_opts)
       end
             
     end
@@ -28,14 +30,15 @@ module QuickFile
       @bucket_name = bucket
 
       if is_provider? [:ceph, :s3]
-        AWS::S3::Bucket.create(@bucket_name)
+        @bucket = @interface.buckets[@bucket_name] || @interface.buckets.create(@bucket_name)
       end
     end
 
     def store(opts)
       if is_provider? [:ceph, :s3]
 
-        AWS::S3::S3Object.store(opts[:key], opts[:body], @bucket_name, :content_type => opts[:content_type])
+        #AWS::S3::S3Object.store(opts[:key], opts[:body], @bucket_name, :content_type => opts[:content_type])
+        @bucket.objects[opts[:key]].write(opts[:body])
 
       elsif is_provider? [:local]
 
@@ -48,7 +51,8 @@ module QuickFile
 
     def delete(key)
       if is_provider? [:ceph, :s3]
-        AWS::S3::S3Object.delete(key, @bucket_name)
+        #AWS::S3::S3Object.delete(key, @bucket_name)
+        @bucket.objects[key].delete
       elsif is_provider? [:local]
         File.delete(local_path(key))
       end
@@ -57,7 +61,7 @@ module QuickFile
     def download(key, to_file)
       if is_provider? [:ceph, :s3]
         open(to_file, 'wb') do |file|
-          AWS::S3::S3Object.stream(key, @bucket_name) do |chunk|
+          @bucket.objects[key].read do |chunk|
             file.write(chunk)
           end
         end
@@ -70,7 +74,8 @@ module QuickFile
 
     def value(key)
       if is_provider? [:ceph, :s3]
-        return AWS::S3::S3Object.value(key, @bucket_name)
+        return @bucket.objects[key].read
+        #return AWS::S3::S3Object.value(key, @bucket_name)
       elsif is_provider? [:local]
         File.open(local_path(key)).read
       end

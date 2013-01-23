@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
 
 	s.add_dependency 'rmagick'
 	s.add_dependency 'mime-types'
-	s.add_dependency 'aws-s3'
+	s.add_dependency 'aws-sdk'
 
   # specify any dependencies here; for example:
   # s.add_development_dependency "rspec"
