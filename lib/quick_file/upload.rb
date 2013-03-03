@@ -114,7 +114,7 @@ module QuickFile
     def cache!
       return unless state? :loaded
       if @uploaded_file
-        cp = save_cache_file(QuickFile.generate_cache_name(extension), @file)
+        cp = save_cache_file(QuickFile.generate_cache_name(extension), @uploaded_file)
       elsif @linked_url
         # download file to 
         cp = download_cache_file(QuickFile.generate_cache_name(extension), @linked_url)
@@ -243,7 +243,7 @@ module QuickFile
 
     def is_video?(style_name=nil)
       style_name ||= :original
-      fp = styles[style_name]["path"] || styles[style_name]["cache"]
+      fp = styles[style_name.to_s]["path"] || styles[style_name.to_s]["cache"]
       QuickFile.is_video_file? fp
     end
 
@@ -255,7 +255,7 @@ module QuickFile
       cache! if state? :loaded
       process! if state? :cached
       return unless state? :processed
-      self.storage_type = STORAGE_TYPES[QuickFile.options[:connection][:provider].to_sym]if self.storage_type.nil?
+      self.storage_type = QuickFile.options[:connection][:name] if self.storage_type.nil?
       begin
         self.styles.keys.each do |style_name|
           store_style! style_name unless styles[style_name]["cache"].nil?
@@ -297,7 +297,6 @@ module QuickFile
         :body => File.open(fn).read,
         :content_type => QuickFile.content_type_for(fn),
         :key => sp,
-        :public => QuickFile.options[:fog_public]
       })
       styles[style_name]["path"] = sp
       styles[style_name]["ct"] = QuickFile.content_type_for(fn)
@@ -326,8 +325,8 @@ module QuickFile
 
     def url(style_name=nil, opts={:secure=>true})
       style_name ||= "original"
-      return default_url(style_name) unless (styles[style_name] && styles[style_name]["path"])
-      "#{QuickFile.host_url[self.storage_type.to_i]}#{styles[style_name]["path"]}"
+      return default_url(style_name) unless (styles[style_name.to_s] && styles[style_name.to_s]["path"])
+      "#{QuickFile.options[:connection][:portal_url]}#{styles[style_name.to_s]["path"]}"
     end
 
     def download(style_name, to_file)
@@ -362,7 +361,7 @@ module QuickFile
 
     def url_hash
       ret = {}
-      processes.keys.each do |style_name|
+      styles.keys.each do |style_name|
         ret[style_name] = self.url(style_name.to_sym)
       end
       ret

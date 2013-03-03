@@ -13,7 +13,6 @@ module QuickFile
         # prepare for local storage access
       elsif @provider == :s3
         conn_opts = {
-          :s3_endpoint       => @options[:host],
           :use_ssl       => ( @options[:use_ssl].nil? ? false : @options[:use_ssl] ),
           :access_key_id     => @options[:access_key_id],
           :secret_access_key => @options[:secret_access_key]
@@ -26,6 +25,7 @@ module QuickFile
         proto = use_ssl ? 'https' : 'http'
         @interface = RightAws::S3.new(@options[:access_key_id], @options[:secret_access_key], {:server => @options[:host], :port => port, :protocol => proto, :no_subdomains => true})
       end
+      self.set_bucket(@options[:directory]) if @options[:directory]
             
     end
 
@@ -50,7 +50,10 @@ module QuickFile
     def store(opts)
       if is_provider? [:s3]
         #AWS::S3::S3Object.store(opts[:key], opts[:body], @bucket_name, :content_type => opts[:content_type])
-        @bucket.objects[opts[:key]].write(opts[:body])
+        write_opts = {}
+        write_opts[:acl] = :public_read if @options[:public] == true
+        write_opts[:content_type] = opts[:content_type] if opts[:content_type]
+        @bucket.objects[opts[:key]].write(opts[:body], write_opts)
       elsif is_provider? [:ceph]
         @bucket.put(opts[:key], opts[:body])
       elsif is_provider? [:local]

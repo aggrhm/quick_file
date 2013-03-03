@@ -8,6 +8,16 @@ module QuickFile
   CACHE_DIR = "/tmp"
   STORAGE_TYPES = {:local => 1, :aws => 2, :ceph => 3}
 
+  if defined?(Rails)
+    # load configuration
+    class Railtie < Rails::Railtie
+      initializer "quick_file.configure" do
+        config_file = Rails.root.join("config", "quick_file.yml")
+        QuickFile.configure(YAML.load_file(config_file)[Rails.env]) unless config_file.nil?
+      end
+    end
+  end
+
   class << self
     def configure(opt=nil)
       if block_given?
@@ -43,7 +53,7 @@ module QuickFile
     def storage
       @@storage ||= begin
         storage = QuickFile::Storage.new(options[:connection])
-        storage.set_bucket(options[:directory])
+        #storage.set_bucket(options[:connection][:directory])
         storage
       end
     end
