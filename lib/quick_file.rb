@@ -129,6 +129,36 @@ module QuickFile
       image
     end
 
+    def save_cache_file(cn, file)
+      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
+      cp = QuickFile.cache_path(cn)
+      File.open(cp, "wb") { |f| f.write(file.read) }
+      return cp
+    end
+
+    def copy_cache_file(cn, fn)
+      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
+      cp = QuickFile.cache_path(cn)
+      FileUtils.copy(fn, cp)
+      return cp
+    end
+
+    def download_cache_file(cn, url)
+      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
+      cp = QuickFile.cache_path(cn)
+      QuickFile.download(url, cp)
+      return cp
+    end
+
+    def write_to_cache_file(cn, str)
+      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
+      cp = QuickFile.cache_path(cn)
+      File.open(cp, "w") { |f| f.write(str) }
+      return cp
+    end
+
+
+
 
   end
 
