@@ -13,17 +13,20 @@ module QuickFile
     #     3. store
 
     STATES = {:loaded => 0, :cached => 1, :processing => 2, :processed => 3, :storing => 4, :stored => 5, :deleted => 6, :error => 7}
-		FILE_CATEGORIES = {:none => 0, :image => 1, :video => 2, :file => 3}
 
     included do
-      cattr_accessor :processes
+      cattr_accessor :processes, :helpers
       self.processes = {}
-
+      self.helpers = {}
     end
 
     module ClassMethods
       def add_style(style_name, blk)
         processes[style_name.to_s] = {:blk => blk}
+      end
+
+      def add_helper(helper_name, args={})
+        helpers[helper_name] = args
       end
 
 			def quick_file_mongomapper_keys!
@@ -34,6 +37,8 @@ module QuickFile
         key :oty, String    # owner type
         key :oid, ObjectId  # owner id
         key :err, Array     # errors
+        key :cat, Integer   # file category
+        key :prf, Hash      # profile
 
         attr_alias :state, :sta
         attr_alias :original_filename, :orf
@@ -41,6 +46,7 @@ module QuickFile
         attr_alias :storage_type, :sto
         attr_alias :error_log, :err
         attr_alias :owner_type, :oty
+        attr_alias :profile, :prf
 			end
 
 			def quick_file_mongoid_keys!
@@ -51,6 +57,8 @@ module QuickFile
         field :oty, as: :owner_type, type: String    # owner type
         field :oid, as: :owner_id, type: Moped::BSON::ObjectId  # owner id
         field :err, as: :error_log, type: Array     # errors
+        field :cat, type: Integer
+        field :prf, as: :profile, type: Hash, default: {}
 			end
     end
 
@@ -112,6 +120,12 @@ module QuickFile
       content_type(style_name).include? "image"
     end
 
+    def is_audio?(style_name=nil)
+      style_name ||= :original
+      return false if content_type(style_name).nil?
+      content_type(style_name).include? "audio"
+    end
+
     def is_video?(style_name=nil)
       style_name ||= :original
       fp = styles[style_name.to_s]["path"] || styles[style_name.to_s]["cache"]
@@ -133,18 +147,33 @@ module QuickFile
       end
     end
 
+    def has_helper?(name)
+      helpers[name.to_sym] != nil
+    end
+
+    def has_exif_data?(field=nil)
+      has_data = !self.profile["exif"].blank?
+      return has_data if field.nil?
+      return false if !has_data
+      return !self.profile["exif"][field].nil?
+    end
+
     def storage_path(style_name, ext)
       # override in base class
       "#{style_name.to_s}/#{self.sanitized_basename}#{ext}"
     end
 
     def file_category
-      if self.state.nil?
-        return FILE_CATEGORIES[:none]
-      elsif self.is_image?
+      return self.cat unless self.cat.nil?
+
+      return FILE_CATEGORIES[:none] if self.state.nil?
+
+      if self.is_image?
         return FILE_CATEGORIES[:image]
       elsif self.is_video?
         return FILE_CATEGORIES[:video]
+      elsif self.is_audio?
+        return FILE_CATEGORIES[:audio]
       else
         return FILE_CATEGORIES[:file]
       end
@@ -212,6 +241,12 @@ module QuickFile
         "ct" => QuickFile.content_type_for(cp),
         "sz" => File.size(cp)
       }
+      # set file category
+      self.cat = QuickFile.file_category_for(cp)
+      # handle helpers
+      if self.has_helper?(:exif) && self.is_image?
+        self.profile["exif"] = QuickFile.extract_exif_data(cp)
+      end
       self.validate!
       if self.error_log.size > 0
         self.state! :error

@@ -7,6 +7,7 @@ require "RMagick"
 module QuickFile
   CACHE_DIR = "/tmp"
   STORAGE_TYPES = {:local => 1, :aws => 2, :ceph => 3}
+  FILE_CATEGORIES = {:none => 0, :image => 1, :video => 2, :audio => 3}
 
   if defined?(Rails)
     # load configuration
@@ -50,6 +51,19 @@ module QuickFile
       filename.downcase.end_with?('.mov', '.3gp', '.wmv', '.m4v', '.mp4', '.flv')
     end
 
+    def file_category_for(filename)
+      ct = content_type_for(filename)
+      if ct.include? "image"
+        return FILE_CATEGORIES[:image]
+      elsif ct.include? "audio"
+        return FILE_CATEGORIES[:audio]
+      elsif is_video_file?(filename)
+        return FILE_CATEGORIES[:video]
+      else
+        return FILE_CATEGORIES[:none]
+      end
+    end
+
     def storage
       @@storage ||= begin
         storage = QuickFile::Storage.new(options[:connection])
@@ -90,6 +104,23 @@ module QuickFile
       outfile = cache_path(generate_cache_name(File.extname(file)))
       nim.write outfile
       outfile
+    end
+
+    def extract_exif_data(file)
+      img = Magick::Image.read(file).first
+      data = img.get_exif_by_entry
+      ret = {}
+      data.each do |el|
+        ret[el[0]] = el[1]
+      end
+      return ret
+    end
+
+    def parse_exif_time(str)
+      ds,ts = str.split(' ')
+      year,month,day = ds.split(':')
+      hour,min,sec = ts.split(':')
+      Time.utc(year, month, day, hour, min, sec)
     end
 
 		def convert_video_to_mp4(file)
