@@ -106,6 +106,10 @@ module QuickFile
       outfile
     end
 
+    def auto_orient!(file)
+      `/usr/bin/mogrify -auto-orient #{file}`
+    end
+
     def extract_exif_data(file)
       img = Magick::Image.read(file).first
       data = img.get_exif_by_entry
