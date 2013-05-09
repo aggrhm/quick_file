@@ -108,6 +108,7 @@ module QuickFile
 
     def auto_orient!(file)
       `/usr/bin/mogrify -auto-orient #{file}`
+      return file
     end
 
     def extract_exif_data(file)
