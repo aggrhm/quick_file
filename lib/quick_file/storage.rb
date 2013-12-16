@@ -76,6 +76,18 @@ module QuickFile
       end
     end
 
+    def rename(old_key, new_key)
+      if is_provider? [:s3]
+        obj = @bucket.objects[old_key]
+        opts = {}
+        opts[:acl] = :public_read if @options[:public] == true
+        obj.move_to(new_key, opts)
+        return obj
+      else
+        raise "Not implemented"
+      end
+    end
+
     def download(key, to_file)
       if is_provider? [:s3]
         open(to_file, 'wb') do |file|

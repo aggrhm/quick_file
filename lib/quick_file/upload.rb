@@ -94,6 +94,11 @@ module QuickFile
       styles[style_name.to_s]["path"]
     end
 
+    def cache_path(style_name=nil)
+      style_name ||= :original
+      styles[style_name.to_s]["cache"]
+    end
+
     def url(style_name=nil, opts={:secure=>true})
       style_name ||= "original"
       return default_url(style_name) unless (styles[style_name.to_s] && styles[style_name.to_s]["path"])
@@ -384,6 +389,24 @@ module QuickFile
       File.delete(cache) unless cache.nil? || !File.exists?(cache)
     end
 
+    def update_style_path!(style_name)
+      style_name = style_name.to_s
+      fn = self.path(style_name)
+      return if fn.nil?
+      np = self.storage_path(style_name, File.extname(fn))
+      return if np == fn
+      obj = QuickFile.storage.rename(fn, np)
+      styles[style_name]["path"] = np
+      self.save
+    end
+
+    def update_style_paths!
+      return unless self.state?(:stored)
+      self.styles.each do |style, data|
+        self.update_style_path!(style)
+      end
+    end
+
     def update_style_data!(style_name)
       fn = path(style_name)
       if storage_protocol == :fog
@@ -400,8 +423,10 @@ module QuickFile
       f
     end
 
-    def download(style_name, to_file)
+    def download(style_name=:original, to_file=nil)
+      to_file = QuickFile.new_cache_file File.extname(self.path(style_name)) if to_file.nil?
       QuickFile.storage.download(self.path(style_name), to_file)
+      return to_file
     end
 
     def delete_files
@@ -412,6 +437,7 @@ module QuickFile
       self.state = STATES[:deleted]
       save
     end
+
 
     
   end
