@@ -78,11 +78,11 @@ module QuickFile
     end
 
     def sanitized_basename
-      File.basename original_filename.gsub( /[^a-zA-Z0-9_\-\.]/, '_'), File.extname(original_filename)
+      File.basename original_filename.gsub( /[^a-zA-Z0-9_\-\.\@]/, '_'), File.extname(original_filename)
     end
 
     def sanitized_filename
-      File.basename original_filename.gsub( /[^a-zA-Z0-9_\-\.]/, '_')
+      File.basename original_filename.gsub( /[^a-zA-Z0-9_\-\.\@]/, '_')
     end
 
     def extension
