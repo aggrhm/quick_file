@@ -76,7 +76,7 @@ badd +0 quick_file.gemspec
 badd +0 lib/quick_file/upload.rb
 args quick_file.gemspec
 set lines=40 columns=80
-winpos 873 109
+winpos 562 312
 edit quick_file.gemspec
 set splitbelow splitright
 set nosplitbelow
@@ -195,7 +195,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 19) / 38)
+let s:l = 1 - ((0 * winheight(0) + 19) / 39)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -319,12 +319,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 37 - ((0 * winheight(0) + 19) / 38)
+let s:l = 351 - ((19 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-37
-normal! 031|
+351
+normal! 08|
 tabnext 2
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
