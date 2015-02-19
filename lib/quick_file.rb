@@ -1,3 +1,4 @@
+require "active_support/all"
 require "quick_file/version"
 require "quick_file/storage"
 require "quick_file/upload"

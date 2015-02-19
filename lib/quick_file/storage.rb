@@ -106,6 +106,26 @@ module QuickFile
       end
     end
 
+    def get(key)
+      if is_provider? [:s3]
+        @bucket.objects[key]
+      elsif is_provider? [:ceph]
+        @bucket.get(key)
+      elsif is_provider? [:local]
+        local_path(key)
+      end
+    end
+
+    def content_type(key)
+      if is_provider? [:s3]
+        @bucket.objects[key].content_type
+      elsif is_provider? [:ceph]
+        @bucket.get(key).content_type
+      elsif is_provider? [:local]
+        QuickFile.content_type_for(local_path(key))
+      end
+    end
+
     def value(key)
       if is_provider? [:s3]
         return @bucket.objects[key].read
