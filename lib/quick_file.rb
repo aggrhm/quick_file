@@ -1,6 +1,9 @@
 require "active_support/all"
 require "quick_file/version"
 require "quick_file/storage"
+require "quick_file/storage/s3_storage"
+require "quick_file/storage/ceph_storage"
+require "quick_file/storage/local_storage"
 require "quick_file/upload"
 require "mime/types"
 require "RMagick"
@@ -67,7 +70,7 @@ module QuickFile
 
     def storage
       @@storage ||= begin
-        storage = QuickFile::Storage.new(options[:connection])
+        storage = QuickFile::Storage.build_for_connection(options[:connection])
         #storage.set_bucket(options[:connection][:directory])
         storage
       end
