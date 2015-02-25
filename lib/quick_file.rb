@@ -2,7 +2,7 @@ require "active_support/all"
 require "quick_file/version"
 require "quick_file/storage"
 require "quick_file/storage/s3_storage"
-require "quick_file/storage/ceph_storage"
+require "quick_file/storage/swift_storage"
 require "quick_file/storage/local_storage"
 require "quick_file/upload"
 require "mime/types"
@@ -68,29 +68,23 @@ module QuickFile
       end
     end
 
-    def storage
-      @@storage ||= begin
-        storage = QuickFile::Storage.build_for_connection(options[:connection])
-        #storage.set_bucket(options[:connection][:directory])
-        storage
+    def storage_map
+      @@storage_map ||= begin
+        ret = {}
+        options[:connections].each do |conn|
+          ret[conn[:name]] = QuickFile::Storage.build_for_connection(conn)
+        end
+        ret
       end
     end
 
-    def fog_directory
-      @@fog_directory ||= begin
-          fog_connection.directories.new(
-          :key => options[:fog][:directory],
-          :public => options[:fog][:public]
-        )
-      end
-    end
-
-    def host_url
-      @@host_url ||= begin
-        {
-          1 => "#{options[:fog][:connection][:local_root]}/#{options[:fog][:directory]}/",
-          2 => "https://s3.amazonaws.com/#{options[:fog][:directory]}/"
-        }
+    def storage_for(name)
+      if name.blank?
+        return self.storage_map.values.select{|s| s.default_when_blank?}.first || self.storage_for(:primary)
+      elsif name == :primary
+        return self.storage_map.values.select{|s| s.primary?}.first || self.storage_map.values.first
+      else
+        return self.storage_map[name]
       end
     end
 

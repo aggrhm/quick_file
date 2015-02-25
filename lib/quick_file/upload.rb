@@ -2,445 +2,425 @@ require 'open-uri'
 
 module QuickFile
 
-  module Upload
-    extend ActiveSupport::Concern
+	module Upload
+		extend ActiveSupport::Concern
 
-    ## 
-    #   required fields: id, state, original_filename, styles
-    #   steps
-    #     1. cache
-    #     2. process
-    #     3. store
+		## 
+		#		required fields: id, state, original_filename, styles
+		#		steps
+		#			1. cache
+		#			2. process
+		#			3. store
 
-    STATES = {:loaded => 0, :cached => 1, :processing => 2, :processed => 3, :storing => 4, :stored => 5, :deleted => 6, :error => 7}
+		STATES = {:loaded => 0, :cached => 1, :processing => 2, :processed => 3, :storing => 4, :stored => 5, :deleted => 6, :error => 7}
 
-    included do
-      cattr_accessor :processes, :helpers
-      self.processes = {}
-      self.helpers = {}
-    end
+		included do
+			cattr_accessor :processes, :helpers
+			self.processes = {}
+			self.helpers = {}
+		end
 
-    module ClassMethods
-      def add_style(style_name, blk)
-        processes[style_name.to_s] = {:blk => blk}
-      end
+		module ClassMethods
+			# TODO: add ability to pass options hash with storage name as option
+			def add_style(style_name, blk)
+				processes[style_name.to_s] = {:blk => blk}
+			end
 
-      def add_helper(helper_name, args={})
-        helpers[helper_name] = args
-      end
+			def add_helper(helper_name, args={})
+				helpers[helper_name] = args
+			end
 
 			def quick_file_mongomapper_keys!
-        key :sta, Integer    # state
-        key :orf, String    # original filename
-        key :sty, Hash      # styles
-        key :sto, String, :default => "s3"    # storage
-        key :oty, String    # owner type
-        key :oid, ObjectId  # owner id
-        key :err, Array     # errors
-        key :cat, Integer   # file category
-        key :prf, Hash      # profile
+				key :sta, Integer		 # state
+				key :orf, String		# original filename
+				key :sty, Hash			# styles
+				key :oty, String		# owner type
+				key :oid, ObjectId	# owner id
+				key :err, Array			# errors
+				key :cat, Integer		# file category
+				key :prf, Hash			# profile
 
-        attr_alias :state, :sta
-        attr_alias :original_filename, :orf
-        attr_alias :styles, :sty
-        attr_alias :storage_type, :sto
-        attr_alias :error_log, :err
-        attr_alias :owner_type, :oty
-        attr_alias :profile, :prf
+				attr_alias :state, :sta
+				attr_alias :original_filename, :orf
+				attr_alias :styles, :sty
+				attr_alias :error_log, :err
+				attr_alias :owner_type, :oty
+				attr_alias :profile, :prf
 			end
 
 			def quick_file_mongoid_keys!
-        field :sta, as: :state, type: Integer    # state
-        field :orf, as: :original_filename, type: String    # original filename
-        field :sty, as: :styles, type: Hash, default: {}      # styles
-        field :sto, as: :storage_type, type: Integer    # storage
-        field :oty, as: :owner_type, type: String    # owner type
-        field :oid, as: :owner_id  # owner id
-        field :err, as: :error_log, type: Array     # errors
-        field :cat, type: Integer
-        field :prf, as: :profile, type: Hash, default: {}
+				field :sta, as: :state, type: Integer		 # state
+				field :orf, as: :original_filename, type: String		# original filename
+				field :sty, as: :styles, type: Hash, default: {}			# styles
+				field :oty, as: :owner_type, type: String		 # owner type
+				field :oid, as: :owner_id  # owner id
+				field :err, as: :error_log, type: Array			# errors
+				field :cat, type: Integer
+				field :prf, as: :profile, type: Hash, default: {}
 			end
-    end
+		end
 
-    ## ACCESSORS
+		## ACCESSORS
 
-    def owner=(obj)
-      self.oty = obj.class.to_s
-      self.oid = obj.id
-    end
+		def owner=(obj)
+			self.oty = obj.class.to_s
+			self.oid = obj.id
+		end
 
-    def state?(val)
-      self.state == STATES[val.to_sym]
-    end
+		def state?(val)
+			self.state == STATES[val.to_sym]
+		end
 
-    def state!(val)
-      self.state = STATES[val.to_sym]
-    end
+		def state!(val)
+			self.state = STATES[val.to_sym]
+		end
 
-    def sanitized_basename
-      File.basename original_filename.gsub( /[^a-zA-Z0-9_\-\.\@]/, '_'), File.extname(original_filename)
-    end
+		def sanitized_basename
+			File.basename original_filename.gsub( /[^a-zA-Z0-9_\-\.\@]/, '_'), File.extname(original_filename)
+		end
 
-    def sanitized_filename
-      File.basename original_filename.gsub( /[^a-zA-Z0-9_\-\.\@]/, '_')
-    end
+		def sanitized_filename
+			File.basename original_filename.gsub( /[^a-zA-Z0-9_\-\.\@]/, '_')
+		end
 
-    def extension
-      File.extname(original_filename)
-    end
+		def extension
+			File.extname(original_filename)
+		end
 
-    def path(style_name=nil)
-      style_name ||= :original
-      styles[style_name.to_s]["path"]
-    end
+		def storage_name(style_name=:original)
+			styles[style_name.to_s]["stg"]
+		end
+		def storage(style_name=:original)
+			QuickFile.storage_for(self.storage_name(style_name))
+		end
 
-    def cache_path(style_name=nil)
-      style_name ||= :original
-      styles[style_name.to_s]["cache"]
-    end
+		def path(style_name=:original)
+			styles[style_name.to_s]["path"]
+		end
 
-    def url(style_name=nil, opts={:secure=>true})
-      style_name ||= "original"
-      return default_url(style_name) unless (styles[style_name.to_s] && styles[style_name.to_s]["path"])
-      "#{QuickFile.options[:connection][:portal_url]}#{styles[style_name.to_s]["path"]}"
-    end
+		def cache_path(style_name=:original)
+			styles[style_name.to_s]["cache"]
+		end
 
-    def value(style_name)
-      QuickFile.storage.value(self.path(style_name))
-    end
+		def default_url(style_name=:original)
+			nil
+		end
 
-    def content_type(style_name=nil)
-      style_name ||= :original
-      styles[style_name.to_s]["ct"]
-    end
+		def url(style_name=:original, opts={:secure=>true})
+			return default_url(style_name) unless (styles[style_name.to_s] && styles[style_name.to_s]["path"])
+			"#{self.storage(style_name).options[:portal_url]}#{styles[style_name.to_s]["path"]}"
+		end
 
-    def size(style_name=nil)
-      style_name ||= :original
-      styles[style_name.to_s]["sz"]
-    end
+		def value(style_name)
+			self.storage.value(self.path(style_name))
+		end
 
-    def is_image?(style_name=nil)
-      style_name ||= :original
-      return false if content_type(style_name).nil?
-      content_type(style_name).include? "image"
-    end
+		def content_type(style_name=:original)
+			styles[style_name.to_s]["ct"]
+		end
 
-    def is_audio?(style_name=nil)
-      style_name ||= :original
-      return false if content_type(style_name).nil?
-      content_type(style_name).include? "audio"
-    end
+		def size(style_name=:original)
+			styles[style_name.to_s]["sz"]
+		end
 
-    def is_video?(style_name=nil)
-      style_name ||= :original
-      fp = styles[style_name.to_s]["path"] || styles[style_name.to_s]["cache"]
-      QuickFile.is_video_file? fp
-    end
+		def is_image?(style_name=:original)
+			return false if content_type(style_name).nil?
+			content_type(style_name).include? "image"
+		end
 
-    def style_exists?(style_name)
-      !styles[style_name.to_s].nil?
-    end
+		def is_audio?(style_name=:original)
+			return false if content_type(style_name).nil?
+			content_type(style_name).include? "audio"
+		end
 
-    def storage_protocol
-      case storage_type.to_i
-      when STORAGE_TYPES[:aws]
-        return :fog
-      when STORAGE_TYPES[:local]
-        return :fog
-      when STORAGE_TYPES[:ceph]
-        return :fog
-      end
-    end
+		def is_video?(style_name=:original)
+			fp = styles[style_name.to_s]["path"] || styles[style_name.to_s]["cache"]
+			QuickFile.is_video_file? fp
+		end
 
-    def has_helper?(name)
-      helpers[name.to_sym] != nil
-    end
+		def style_exists?(style_name)
+			!styles[style_name.to_s].nil?
+		end
 
-    def has_exif_data?(field=nil)
-      has_data = !self.profile["exif"].blank?
-      return has_data if field.nil?
-      return false if !has_data
-      return !self.profile["exif"][field].nil?
-    end
+		def has_helper?(name)
+			helpers[name.to_sym] != nil
+		end
 
-    def storage_path(style_name, ext)
-      # override in base class
-      "#{style_name.to_s}/#{self.sanitized_basename}#{ext}"
-    end
+		def has_exif_data?(field=nil)
+			has_data = !self.profile["exif"].blank?
+			return has_data if field.nil?
+			return false if !has_data
+			return !self.profile["exif"][field].nil?
+		end
 
-    def file_category
-      return self.cat unless self.cat.nil?
+		def storage_path(style_name, ext)
+			# override in base class
+			"#{style_name.to_s}/#{self.sanitized_basename}#{ext}"
+		end
 
-      return FILE_CATEGORIES[:none] if self.state.nil?
+		def file_category
+			return self.cat unless self.cat.nil?
 
-      if self.is_image?
-        return FILE_CATEGORIES[:image]
-      elsif self.is_video?
-        return FILE_CATEGORIES[:video]
-      elsif self.is_audio?
-        return FILE_CATEGORIES[:audio]
-      else
-        return FILE_CATEGORIES[:file]
-      end
-    end
+			return FILE_CATEGORIES[:none] if self.state.nil?
 
-    def url_hash
-      ret = {}
-      styles.keys.each do |style_name|
-        ret[style_name] = self.url(style_name.to_sym)
-      end
-      ret
-    end
+			if self.is_image?
+				return FILE_CATEGORIES[:image]
+			elsif self.is_video?
+				return FILE_CATEGORIES[:video]
+			elsif self.is_audio?
+				return FILE_CATEGORIES[:audio]
+			else
+				return FILE_CATEGORIES[:file]
+			end
+		end
+
+		def url_hash
+			ret = {}
+			styles.keys.each do |style_name|
+				ret[style_name] = self.url(style_name.to_sym)
+			end
+			ret
+		end
 
 
-    ## INITIALIZATION
+		## INITIALIZATION
 
-    def uploaded_file=(uf)
-      self.error_log = []
-      @uploaded_file = uf
-      self.original_filename = uf.original_filename
-      self.state! :loaded
-      cache!
-    end
+		def data=(opts)
+			opts = opts.symbolize_keys
+			if opts[:type] == :file
+				self.uploaded_file=(opts[:data])
+			elsif opts[:type] == :url
+				self.linked_file=(opts[:data])
+			elsif opts[:type] == :local
+				self.local_file=(opts[:data])
+			elsif opts[:type] == :string
+				self.load_from_string(opts[:data], opts[:name])
+			end
+		end
 
-    def linked_file=(url)
-      self.error_log = []
-      @linked_url = url
-      self.original_filename = url.split('/').last
-      self.state! :loaded
-      save
-    end
+		def uploaded_file=(uf)
+			self.error_log = []
+			@uploaded_file = uf
+			self.original_filename = uf.original_filename
+			self.state! :loaded
+			cache!
+		end
 
-    def local_file=(fn)
-      self.error_log = []
-      @local_file = fn
-      self.original_filename = fn.split('/').last
-      self.state! :loaded
-      cache!
-    end
+		def linked_file=(url)
+			self.error_log = []
+			@linked_url = url
+			self.original_filename = url.split('/').last
+			self.state! :loaded
+			cache!
+		end
 
-    def load_from_string(str, name)
-      self.error_log = []
-      @string_file = str
-      self.original_filename = name
-      self.state! :loaded
-      cache!
-    end
+		def local_file=(fn)
+			self.error_log = []
+			@local_file = fn
+			self.original_filename = fn.split('/').last
+			self.state! :loaded
+			cache!
+		end
 
-    ## ACTIONS
+		def load_from_string(str, name)
+			self.error_log = []
+			@string_file = str
+			self.original_filename = name
+			self.state! :loaded
+			cache!
+		end
 
-    def cache!
-      return unless state? :loaded
-      if @uploaded_file
-        cp = QuickFile.save_cache_file(QuickFile.generate_cache_name(extension), @uploaded_file)
-      elsif @linked_url
-        # download file to 
-        cp = QuickFile.download_cache_file(QuickFile.generate_cache_name(extension), @linked_url)
-      elsif @local_file
-        cp = QuickFile.copy_cache_file(QuickFile.generate_cache_name(extension), @local_file)
-      elsif @string_file
-        cp = QuickFile.write_to_cache_file(QuickFile.generate_cache_name(extension), @string_file)
-      end
-      self.styles["original"] = {
-        "cache" => cp, 
-        "ct" => QuickFile.content_type_for(cp),
-        "sz" => File.size(cp)
-      }
-      # set file category
-      self.cat = QuickFile.file_category_for(cp)
-      # handle helpers
-      if self.has_helper?(:exif) && self.is_image?
-        self.profile["exif"] = QuickFile.extract_exif_data(cp)
-      end
-      self.validate!
-      if self.error_log.size > 0
-        self.state! :error
-        File.delete(cp)
-      else
-        self.state! :cached
-      end
-      self.save
-    end
+		## ACTIONS
 
-    def process!
-      cache! if state? :loaded
-      return unless state? :cached
-      self.state! :processing
-      self.save
-      begin
-        #puts "#{processes.size} processes"
-        processes.each do |style_name, opts|
-          process_style! style_name
-        end
-        self.state! :processed
-      rescue Exception => e
-        puts e.message
-        puts e.backtrace.join("\n\t")
-        self.error_log << "PROCESS: #{e.message}"
-        self.state! :error
-      end
+		def cache!
+			return unless state? :loaded
+			if @uploaded_file
+				cp = QuickFile.save_cache_file(QuickFile.generate_cache_name(extension), @uploaded_file)
+			elsif @linked_url
+				# download file to 
+				cp = QuickFile.download_cache_file(QuickFile.generate_cache_name(extension), @linked_url)
+			elsif @local_file
+				cp = QuickFile.copy_cache_file(QuickFile.generate_cache_name(extension), @local_file)
+			elsif @string_file
+				cp = QuickFile.write_to_cache_file(QuickFile.generate_cache_name(extension), @string_file)
+			end
+			self.styles["original"] = {
+				"cache" => cp, 
+				"ct" => QuickFile.content_type_for(cp),
+				"sz" => File.size(cp)
+			}
+			# set file category
+			self.cat = QuickFile.file_category_for(cp)
+			# handle helpers
+			if self.has_helper?(:exif) && self.is_image?
+				self.profile["exif"] = QuickFile.extract_exif_data(cp)
+			end
+			self.validate!
+			if self.error_log.size > 0
+				self.state! :error
+				File.delete(cp)
+			else
+				self.state! :cached
+			end
+			self.save
+		end
 
-      self.save
-    end
+		def process!
+			cache! if state? :loaded
+			return unless state? :cached
+			self.state! :processing
+			self.save
+			begin
+				#puts "#{processes.size} processes"
+				processes.each do |style_name, opts|
+					process_style! style_name
+				end
+				self.state! :processed
+			rescue Exception => e
+				puts e.message
+				puts e.backtrace.join("\n\t")
+				self.error_log << "PROCESS: #{e.message}"
+				self.state! :error
+			end
 
-    def store!
-      cache! if state? :loaded
-      process! if state? :cached
-      return unless state? :processed
-      self.storage_type = QuickFile.options[:connection][:name] if self.storage_type.nil?
-      begin
-        self.styles.keys.each do |style_name|
-          store_style! style_name unless styles[style_name]["cache"].nil?
-        end
-        self.state = STATES[:stored]
-      rescue StandardError => e
-        puts e.message
-        puts e.backtrace.join("\n\t")
-        self.error_log << "STORE: #{e.message}"
-        if self.error_log.count < 5
-          self.store!
-        else
-          self.state! :error
-        end
-      end
-      save
-    end
+			self.save
+		end
 
-    def reprocess!(style_names)
-      style_names = style_names.collect{|s| s.to_sym}
-      return unless (self.state?(:stored))
-      raise "Cannot reprocess original" if style_names.include?(:original)
+		def store!
+			cache! if state? :loaded
+			process! if state? :cached
+			return unless state?(:processed)
+			begin
+				self.styles.keys.each do |style_name|
+					store_style! style_name unless styles[style_name]["cache"].nil?
+				end
+				self.state = STATES[:stored]
+			rescue StandardError => e
+				puts e.message
+				puts e.backtrace.join("\n\t")
+				self.error_log << "STORE: #{e.message}"
+				if self.error_log.count < 5
+					self.store!
+				else
+					self.state! :error
+				end
+			end
+			save
+		end
 
-      # download original file
-      cp = QuickFile.new_cache_file File.extname(self.path(:original))
-      QuickFile.storage.download(self.path(:original), cp)
-      self.styles["original"]["cache"] = cp
+		def reprocess!(style_names)
+			style_names = style_names.collect{|s| s.to_sym}
+			return unless (self.state?(:stored))
+			raise "Cannot reprocess original" if style_names.include?(:original)
 
-      style_names.each do |style_name|
-        # delete stored style
-        self.delete_style!(style_name)
+			# download original file
+			cp = QuickFile.new_cache_file File.extname(self.path(:original))
+			self.storage(:original).download(self.path(:original), cp)
+			self.styles["original"]["cache"] = cp
 
-        # process style
-        self.process_style!(style_name)
+			style_names.each do |style_name|
+				# delete stored style
+				self.delete_style!(style_name)
 
-        # store style
-        self.store_style!(style_name)
-      end
+				# process style
+				self.process_style!(style_name)
 
-      # clean up original stuff
-      File.delete(self.styles["original"]["cache"])
-      self.styles["original"].delete("cache")
+				# store style
+				self.store_style!(style_name)
+			end
 
-      self.save
-    end
+			# clean up original stuff
+			File.delete(self.styles["original"]["cache"])
+			self.styles["original"].delete("cache")
 
-    def add_file!(style_name, path)
-      styles[style_name.to_s] = {"path" => path}
-      update_style_data!(style_name.to_s)
-      self.state = STATES[:stored]
-      save
-    end
+			self.save
+		end
 
-    def validate!
-      # implement in base class to perform validations
-    end
+		def validate!
+			# implement in base class to perform validations
+		end
 
-    def process_style!(style_name)
-      style_name = style_name.to_s
-      #puts "Processing #{style_name}..."
-      opts = processes[style_name]
-      fn = opts[:blk].call(styles["original"]["cache"])
-      unless fn.nil?
-        if (styles.key?(style_name) && !styles[style_name]["cache"].nil?)
-          File.delete(styles[style_name]["cache"])
-        end
-        styles[style_name.to_s] = {"cache" => fn, 
-                                   "ct" => QuickFile.content_type_for(fn),
-                                   "sz" => File.size(fn)}
-      end
+		def process_style!(style_name)
+			style_name = style_name.to_s
+			#puts "Processing #{style_name}..."
+			opts = processes[style_name]
+			fn = opts[:blk].call(styles["original"]["cache"])
+			unless fn.nil?
+				if (styles.key?(style_name) && !styles[style_name]["cache"].nil?)
+					File.delete(styles[style_name]["cache"])
+				end
+				styles[style_name.to_s] = {"cache" => fn, 
+																	 "ct" => QuickFile.content_type_for(fn),
+																	 "sz" => File.size(fn)}
+			end
 
-    end
+		end
 
-    def store_style!(style_name)
-      style_name = style_name.to_s
-      fn = styles[style_name]["cache"]
-      sp = storage_path(style_name, File.extname(fn))
-      QuickFile.storage.store({
-        :body => File.open(fn).read,
-        :content_type => QuickFile.content_type_for(fn),
-        :key => sp,
-      })
-      styles[style_name]["path"] = sp
-      styles[style_name]["ct"] = QuickFile.content_type_for(fn)
-      styles[style_name]["sz"] = File.size(fn)
-      styles[style_name].delete("cache")
-      File.delete(fn)
+		def store_style!(style_name)
+			style_name = style_name.to_s
+			fn = styles[style_name]["cache"]
+			sp = storage_path(style_name, File.extname(fn))
+			storage = QuickFile.storage_for(:primary)
+			storage.store({
+				:body => File.open(fn).read,
+				:content_type => QuickFile.content_type_for(fn),
+				:key => sp,
+			})
+			styles[style_name]["path"] = sp
+			styles[style_name]["ct"] = QuickFile.content_type_for(fn)
+			styles[style_name]["sz"] = File.size(fn)
+			styles[style_name]["stg"] = storage.name
+			styles[style_name].delete("cache")
+			File.delete(fn)
+			save
+		end
 
-      save
-    end
+		def delete_style!(style_name)
+			style_name = style_name.to_s
+			return if self.styles[style_name].nil?
 
-    def delete_style!(style_name)
-      style_name = style_name.to_s
-      return if self.styles[style_name].nil?
+			path = self.styles[style_name]["path"]
+			cache = self.styles[style_name]["cache"]
+			self.storage(style_name).delete(path) unless path.nil?
+			File.delete(cache) unless cache.nil? || !File.exists?(cache)
+		end
 
-      path = self.styles[style_name]["path"]
-      cache = self.styles[style_name]["cache"]
-      QuickFile.storage.delete(path) unless path.nil?
-      File.delete(cache) unless cache.nil? || !File.exists?(cache)
-    end
+		def update_style_path!(style_name)
+			style_name = style_name.to_s
+			fn = self.path(style_name)
+			return if fn.nil?
+			np = self.storage_path(style_name, File.extname(fn))
+			return if np == fn
+			obj = self.storage(style_name).rename(fn, np)
+			styles[style_name]["path"] = np
+			self.save
+		end
 
-    def update_style_path!(style_name)
-      style_name = style_name.to_s
-      fn = self.path(style_name)
-      return if fn.nil?
-      np = self.storage_path(style_name, File.extname(fn))
-      return if np == fn
-      obj = QuickFile.storage.rename(fn, np)
-      styles[style_name]["path"] = np
-      self.save
-    end
+		def update_style_paths!
+			return unless self.state?(:stored)
+			self.styles.each do |style, data|
+				self.update_style_path!(style)
+			end
+		end
 
-    def update_style_paths!
-      return unless self.state?(:stored)
-      self.styles.each do |style, data|
-        self.update_style_path!(style)
-      end
-    end
+		def download(style_name=:original, to_file=nil)
+			to_file = QuickFile.new_cache_file File.extname(self.path(style_name)) if to_file.nil?
+			self.storage(style_name).download(self.path(style_name), to_file)
+			return to_file
+		end
 
-    def update_style_data!(style_name)
-      fn = path(style_name)
-      if storage_protocol == :fog
-        f = QuickFile.fog_directory.files.get(fn)
-        if f.nil?
-          styles[style_name]["ct"] = QuickFile.content_type_for(fn)
-          styles[style_name]["sz"] = 0
-        else
-          styles[style_name]["ct"] = f.content_type.nil? ? QuickFile.content_type_for(fn) : f.content_type
-          styles[style_name]["sz"] = f.content_length
-        end
-        save
-      end
-      f
-    end
-
-    def download(style_name=:original, to_file=nil)
-      to_file = QuickFile.new_cache_file File.extname(self.path(style_name)) if to_file.nil?
-      QuickFile.storage.download(self.path(style_name), to_file)
-      return to_file
-    end
-
-    def delete_files
-      # delete uploaded files
-      self.styles.each do |k,v|
-        self.delete_style!(k)
-      end
-      self.state = STATES[:deleted]
-      save
-    end
+		def delete_files
+			# delete uploaded files
+			self.styles.each do |k,v|
+				self.delete_style!(k)
+			end
+			self.state = STATES[:deleted]
+			save
+		end
 
 
-    
-  end
+		
+	end
 
 end
 

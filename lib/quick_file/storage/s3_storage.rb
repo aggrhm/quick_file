@@ -13,7 +13,7 @@ module QuickFile
           :access_key_id     => @options[:access_key_id],
           :secret_access_key => @options[:secret_access_key]
         }
-        #conn_opts[:use_ssl] = @options[:use_ssl] if @options[:use_ssl]
+        conn_opts[:proxy_uri] = @options[:host] unless @options[:host].nil?
         @interface = AWS::S3.new(conn_opts)
 
         self.set_bucket(@options[:directory])
@@ -65,6 +65,9 @@ module QuickFile
             file.write(chunk)
           end
         end
+      end
+      def size
+        @source.content_length
       end
       def content_type
         @source.content_type

@@ -6,8 +6,8 @@ module QuickFile
       kls = case opts[:provider].to_sym
             when :s3
               QuickFile::Storage::S3Storage
-            when :ceph
-              QuickFile::Storage::CephStorage
+            when :swift
+              QuickFile::Storage::SwiftStorage
             when :local
               QuickFile::Storage::LocalStorage
             end
@@ -26,6 +26,18 @@ module QuickFile
 
       def interface
         @interface
+      end
+      def options
+        @options
+      end
+      def name
+        @options[:name]
+      end
+      def default_when_blank?
+        @options[:default_when_blank] == true
+      end
+      def primary?
+        @options[:primary] == true
       end
 
       def store(opts)
@@ -73,6 +85,8 @@ module QuickFile
       def download
       end
       def content_type
+      end
+      def size
       end
       def etag
       end
