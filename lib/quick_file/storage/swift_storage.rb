@@ -72,6 +72,9 @@ module QuickFile
       def size
         @source.content_length
       end
+      def content_type
+        @source.content_type
+      end
       def etag
         @source.etag
       end
