@@ -276,9 +276,9 @@ module QuickFile
 					process_style! style_name
 				end
 				self.state! :processed
-			rescue Exception => e
-				puts e.message
-				puts e.backtrace.join("\n\t")
+			rescue => e
+			  QuickFile.log e.message
+				QuickFile.log e.backtrace.join("\n\t")
 				self.error_log << "PROCESS: #{e.message}"
 				self.state! :error
 			end
@@ -295,11 +295,11 @@ module QuickFile
 					store_style! style_name unless styles[style_name]["cache"].nil?
 				end
 				self.state = STATES[:stored]
-			rescue StandardError => e
-				puts e.message
-				puts e.backtrace.join("\n\t")
+			rescue => e
+			  QuickFile.log e.message
+        QuickFile.log e.backtrace.join("\n\t")
 				self.error_log << "STORE: #{e.message}"
-				if self.error_log.count < 5
+				if self.error_log.count < 3
 					self.store!
 				else
 					self.state! :error

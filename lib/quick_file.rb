@@ -17,6 +17,7 @@ module QuickFile
     # load configuration
     class Railtie < Rails::Railtie
       initializer "quick_file.configure" do
+        QuickFile.logger = Rails.logger
         config_file = Rails.root.join("config", "quick_file.yml")
         QuickFile.configure(YAML.load_file(config_file)[Rails.env]) unless config_file.nil?
       end
@@ -35,6 +36,20 @@ module QuickFile
 
     def options
       @@options ||= {}
+    end
+
+    def logger=(logger)
+      @logger = logger
+    end
+    def logger
+      @logger
+    end
+    def log(msg, level=Logger::INFO)
+      if @logger
+        @logger.add(level, msg)
+      else
+        puts msg
+      end
     end
 
     def generate_cache_name(ext)
