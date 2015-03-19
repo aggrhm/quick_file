@@ -2,12 +2,12 @@ module QuickFile
 
   module Storage
 
-    class CephStorage < StorageBase
+    class LocalStorage < StorageBase
 
       def initialize(opts)
         super(opts)
 
-        @bucket_name = bucket
+        @bucket_name = opts[:directory]
       end
 
       def store(opts)
