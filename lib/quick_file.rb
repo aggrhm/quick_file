@@ -69,6 +69,17 @@ module QuickFile
     def is_video_file?(filename)
       filename.downcase.end_with?('.mov', '.3gp', '.wmv', '.m4v', '.mp4', '.flv')
     end
+		def is_image_file?(filename)
+      ct = content_type_for(filename)
+			return false if ct.nil?
+			ct.include? "image"
+		end
+		def is_audio_file?(filename)
+      ct = content_type_for(filename)
+			return false if ct.nil?
+			ct.include? "audio"
+		end
+
 
     def file_category_for(filename)
       ct = content_type_for(filename)
@@ -122,6 +133,18 @@ module QuickFile
     def auto_orient!(file)
       `/usr/bin/mogrify -auto-orient #{file}`
       return file
+    end
+
+    def extract_image_data(file)
+      img = Magick::Image.read(file).first
+      ret = {}
+      ret['width'] = img.columns
+      ret['height'] = img.rows
+      ret['format'] = img.format
+      ret['depth'] = img.depth
+      ret['resolution_x'] = img.x_resolution
+      ret['resolution_y'] = img.y_resolution
+      return ret
     end
 
     def extract_exif_data(file)

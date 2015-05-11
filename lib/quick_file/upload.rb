@@ -26,7 +26,17 @@ module QuickFile
 				processes[style_name.to_s] = {:blk => blk}
 			end
 
-			def add_helper(helper_name, args={})
+      ##
+      # Adds helper to be ran after item is cached to build profile.
+      #
+      # Example:
+      # add_helper :exif, lambda {|upload, orig_file|
+      #   if QuickFile.is_image_file?(orig_file)
+      #     upload.profile['exif'] = QuickFile.extract_exif_data(orig_file)
+      #   end
+      # }
+			def add_helper(helper_name, args={}, blk)
+        args[:blk] = blk
 				helpers[helper_name] = args
 			end
 
@@ -251,10 +261,12 @@ module QuickFile
 			}
 			# set file category
 			self.cat = QuickFile.file_category_for(cp)
+
 			# handle helpers
-			if self.has_helper?(:exif) && self.is_image?
-				self.profile["exif"] = QuickFile.extract_exif_data(cp)
-			end
+      self.class.helpers.each do |name, helper|
+        helper[:blk].call(self, cp)
+      end
+
 			self.validate!
 			if self.error_log.size > 0
 				self.state! :error
