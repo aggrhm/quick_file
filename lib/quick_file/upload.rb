@@ -1,4 +1,5 @@
 require 'open-uri'
+require 'digest/md5'
 
 module QuickFile
 
@@ -49,6 +50,7 @@ module QuickFile
 				key :err, Array			# errors
 				key :cat, Integer		# file category
 				key :prf, Hash			# profile
+        key :mh, String     # md5_hash
 
 				attr_alias :state, :sta
 				attr_alias :original_filename, :orf
@@ -56,6 +58,7 @@ module QuickFile
 				attr_alias :error_log, :err
 				attr_alias :owner_type, :oty
 				attr_alias :profile, :prf
+        attr_alias :md5_hash, :mh
 			end
 
 			def quick_file_mongoid_keys!
@@ -67,6 +70,7 @@ module QuickFile
 				field :err, as: :error_log, type: Array			# errors
 				field :cat, type: Integer
 				field :prf, as: :profile, type: Hash, default: {}
+        field :mh, as: :md5_hash, type: String
 			end
 		end
 
@@ -195,17 +199,28 @@ module QuickFile
 
 		## INITIALIZATION
 
-		def data=(opts)
-			opts = opts.symbolize_keys
-			if opts[:type] == :file
-				self.uploaded_file=(opts[:data])
-			elsif opts[:type] == :url
-				self.linked_file=(opts[:data])
-			elsif opts[:type] == :local
-				self.local_file=(opts[:data])
-			elsif opts[:type] == :string
-				self.load_from_string(opts[:data], opts[:name])
-			end
+		def source=(opts)
+      if opts.is_a?(String)
+        opts = JSON.parse(opts)
+      end
+      if opts.is_a?(Hash)
+        opts = opts.symbolize_keys
+        if opts[:type] == 'file'
+          self.uploaded_file=(opts[:data])
+        elsif opts[:type] == 'url'
+          self.linked_file=(opts[:data])
+        elsif opts[:type] == 'local'
+          self.local_file=(opts[:data])
+        elsif opts[:type] == 'string'
+          self.load_from_string(opts)
+        elsif opts[:type] == 'base64'
+          self.load_from_base64(opts)
+        else
+          raise "Unknown source type."
+        end
+      else
+        self.uploaded_file = opts
+      end
 		end
 
 		def uploaded_file=(uf)
@@ -232,13 +247,25 @@ module QuickFile
 			cache!
 		end
 
-		def load_from_string(str, name)
+		def load_from_string(opts)
+      str = opts[:data]
+      name = opts[:filename]
 			self.error_log = []
 			@string_file = str
 			self.original_filename = name
 			self.state! :loaded
 			cache!
 		end
+
+    def load_from_base64(opts)
+      ad = opts[:data]
+      ad = ad.split(',').last if ad.include?(',')
+      @binary_data = Base64.decode64(ad)
+      self.error_log = []
+      self.original_filename = opts[:filename]
+      self.state! :loaded
+      cache!
+    end
 
 		## ACTIONS
 
@@ -253,6 +280,8 @@ module QuickFile
 				cp = QuickFile.copy_cache_file(QuickFile.generate_cache_name(extension), @local_file)
 			elsif @string_file
 				cp = QuickFile.write_to_cache_file(QuickFile.generate_cache_name(extension), @string_file)
+      elsif @binary_data
+        cp = QuickFile.write_to_cache_file(QuickFile.generate_cache_name(extension), @binary_data, 'wb')
 			end
 			self.styles["original"] = {
 				"cache" => cp, 
@@ -261,6 +290,8 @@ module QuickFile
 			}
 			# set file category
 			self.cat = QuickFile.file_category_for(cp)
+      # set md5
+      self.md5_hash = Digest::MD5.file(cp).hexdigest
 
 			# handle helpers
       self.class.helpers.each do |name, helper|
@@ -274,7 +305,6 @@ module QuickFile
 			else
 				self.state! :cached
 			end
-			self.save
 		end
 
 		def process!

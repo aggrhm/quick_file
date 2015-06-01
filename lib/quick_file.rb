@@ -1,12 +1,12 @@
 require "active_support/all"
+require "mime/types"
+require "rmagick"
 require "quick_file/version"
 require "quick_file/storage"
 require "quick_file/storage/s3_storage"
 require "quick_file/storage/swift_storage"
 require "quick_file/storage/local_storage"
 require "quick_file/upload"
-require "mime/types"
-require "RMagick"
 
 module QuickFile
   CACHE_DIR = "/tmp"
@@ -222,10 +222,10 @@ module QuickFile
       return cp
     end
 
-    def write_to_cache_file(cn, str)
+    def write_to_cache_file(cn, str, wf="w")
       Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
       cp = QuickFile.cache_path(cn)
-      File.open(cp, "w") { |f| f.write(str) }
+      File.open(cp, wf) { |f| f.write(str) }
       return cp
     end
 
