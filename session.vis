@@ -87,7 +87,7 @@ badd +1 lib/quick_file/storage/swift_storage.rb
 badd +6 Gemfile
 args quick_file.gemspec
 set lines=48 columns=205
-winpos 280 603
+winpos 946 423
 edit quick_file.gemspec
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -103,20 +103,20 @@ set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 exe 'vert 1resize ' . ((&columns * 102 + 102) / 205)
-exe '2resize ' . ((&lines * 23 + 24) / 48)
+exe '2resize ' . ((&lines * 24 + 24) / 48)
 exe 'vert 2resize ' . ((&columns * 102 + 102) / 205)
-exe '3resize ' . ((&lines * 21 + 24) / 48)
+exe '3resize ' . ((&lines * 20 + 24) / 48)
 exe 'vert 3resize ' . ((&columns * 102 + 102) / 205)
 argglobal
-nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
 nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -219,24 +219,24 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 17 - ((16 * winheight(0) + 22) / 45)
+let s:l = 24 - ((7 * winheight(0) + 22) / 45)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-17
-normal! 052|
+24
+normal! 038|
 wincmd w
 argglobal
 edit lib/quick_file/version.rb
-nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
 nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -339,24 +339,24 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 2 - ((1 * winheight(0) + 11) / 23)
+let s:l = 2 - ((1 * winheight(0) + 12) / 24)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 2
-normal! 016|
+normal! 018|
 wincmd w
 argglobal
 edit Gemfile
-nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
 nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -459,7 +459,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 6 - ((0 * winheight(0) + 10) / 21)
+let s:l = 6 - ((0 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -467,9 +467,9 @@ normal! zt
 normal! 03|
 wincmd w
 exe 'vert 1resize ' . ((&columns * 102 + 102) / 205)
-exe '2resize ' . ((&lines * 23 + 24) / 48)
+exe '2resize ' . ((&lines * 24 + 24) / 48)
 exe 'vert 2resize ' . ((&columns * 102 + 102) / 205)
-exe '3resize ' . ((&lines * 21 + 24) / 48)
+exe '3resize ' . ((&lines * 20 + 24) / 48)
 exe 'vert 3resize ' . ((&columns * 102 + 102) / 205)
 tabedit lib/quick_file.rb
 set splitbelow splitright
@@ -484,15 +484,15 @@ set winheight=1 winwidth=1
 exe 'vert 1resize ' . ((&columns * 102 + 102) / 205)
 exe 'vert 2resize ' . ((&columns * 102 + 102) / 205)
 argglobal
-nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
 nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -604,15 +604,15 @@ normal! 033|
 wincmd w
 argglobal
 edit lib/quick_file/upload.rb
-nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
 nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -731,15 +731,15 @@ set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
-nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
 nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -865,15 +865,15 @@ exe 'vert 1resize ' . ((&columns * 68 + 102) / 205)
 exe 'vert 2resize ' . ((&columns * 68 + 102) / 205)
 exe 'vert 3resize ' . ((&columns * 67 + 102) / 205)
 argglobal
-nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
 nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -976,155 +976,155 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 40 - ((39 * winheight(0) + 22) / 45)
-if s:l < 1 | let s:l = 1 | endif
-exe s:l
-normal! zt
-40
-normal! 031|
-wincmd w
-argglobal
-edit lib/quick_file/storage/swift_storage.rb
-nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
-nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
-setlocal keymap=
-setlocal noarabic
-setlocal autoindent
-setlocal balloonexpr=RubyBalloonexpr()
-setlocal nobinary
-setlocal bufhidden=
-setlocal buflisted
-setlocal buftype=
-setlocal nocindent
-setlocal cinkeys=0{,0},0),:,0#,!^F,o,O,e
-setlocal cinoptions=
-setlocal cinwords=if,else,while,do,for,switch
-setlocal colorcolumn=
-setlocal comments=:#
-setlocal commentstring=#\ %s
-setlocal complete=.,w,b,u,t,i
-setlocal concealcursor=
-setlocal conceallevel=0
-setlocal completefunc=
-setlocal nocopyindent
-setlocal cryptmethod=
-setlocal nocursorbind
-setlocal nocursorcolumn
-setlocal nocursorline
-setlocal define=
-setlocal dictionary=
-setlocal nodiff
-setlocal equalprg=
-setlocal errorformat=
-setlocal expandtab
-if &filetype != 'ruby'
-setlocal filetype=ruby
-endif
-setlocal foldcolumn=0
-setlocal foldenable
-setlocal foldexpr=0
-setlocal foldignore=#
-setlocal foldlevel=0
-setlocal foldmarker={{{,}}}
-setlocal foldmethod=manual
-setlocal foldminlines=1
-setlocal foldnestmax=20
-setlocal foldtext=foldtext()
-setlocal formatexpr=
-setlocal formatoptions=croql
-setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
-setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
-setlocal include=^\\s*\\<\\(load\\>\\|require\\>\\|autoload\\s*:\\=[\"']\\=\\h\\w*[\"']\\=,\\)
-setlocal includeexpr=substitute(substitute(v:fname,'::','/','g'),'$','.rb','')
-setlocal indentexpr=GetRubyIndent(v:lnum)
-setlocal indentkeys=0{,0},0),0],!^F,o,O,e,=end,=else,=elsif,=when,=ensure,=rescue,==begin,==end
-setlocal noinfercase
-setlocal iskeyword=@,48-57,_,192-255
-setlocal keywordprg=ri\ -T\ -f\ bs
-setlocal nolinebreak
-setlocal nolisp
-setlocal nolist
-setlocal nomacmeta
-setlocal makeprg=
-setlocal matchpairs=(:),{:},[:]
-setlocal modeline
-setlocal modifiable
-setlocal nrformats=octal,hex
-setlocal nonumber
-setlocal numberwidth=4
-setlocal omnifunc=rubycomplete#Complete
-setlocal path=/Library/Ruby/Site/2.0.0,/Library/Ruby/Site/2.0.0/x86_64-darwin14,/Library/Ruby/Site/2.0.0/universal-darwin14,/Library/Ruby/Site,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/x86_64-darwin14,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/universal-darwin14,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/x86_64-darwin14,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/universal-darwin14
-setlocal nopreserveindent
-setlocal nopreviewwindow
-setlocal quoteescape=\\
-setlocal noreadonly
-setlocal norelativenumber
-setlocal norightleft
-setlocal rightleftcmd=search
-setlocal noscrollbind
-setlocal shiftwidth=2
-setlocal noshortname
-setlocal nosmartindent
-setlocal softtabstop=2
-setlocal nospell
-setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
-setlocal spellfile=
-setlocal spelllang=en
-setlocal statusline=
-setlocal suffixesadd=.rb
-setlocal swapfile
-setlocal synmaxcol=3000
-if &syntax != 'ruby'
-setlocal syntax=ruby
-endif
-setlocal tabstop=2
-setlocal tags=/osi/common/vob/tags,./tags,/Library/Ruby/Site/2.0.0/tags,/Library/Ruby/Site/2.0.0/x86_64-darwin14/tags,/Library/Ruby/Site/2.0.0/universal-darwin14/tags,/Library/Ruby/Site/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/x86_64-darwin14/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/universal-darwin14/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/x86_64-darwin14/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/universal-darwin14/tags
-setlocal textwidth=0
-setlocal thesaurus=
-setlocal noundofile
-setlocal nowinfixheight
-setlocal nowinfixwidth
-setlocal wrap
-setlocal wrapmargin=0
-silent! normal! zE
-let s:l = 43 - ((11 * winheight(0) + 22) / 45)
+let s:l = 43 - ((4 * winheight(0) + 22) / 45)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 43
-normal! 0154|
+normal! 031|
+wincmd w
+argglobal
+edit lib/quick_file/storage/swift_storage.rb
+nnoremap <buffer> <silent> ] :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe v:count1."stag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe        "stjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe      "stselect =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> } :exe          "ptag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g} :exe        "ptjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent>  :exe  v:count1."tag =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g :exe         "tjump =RubyCursorIdentifier()"
+nnoremap <buffer> <silent> g] :exe       "tselect =RubyCursorIdentifier()"
+setlocal keymap=
+setlocal noarabic
+setlocal autoindent
+setlocal balloonexpr=RubyBalloonexpr()
+setlocal nobinary
+setlocal bufhidden=
+setlocal buflisted
+setlocal buftype=
+setlocal nocindent
+setlocal cinkeys=0{,0},0),:,0#,!^F,o,O,e
+setlocal cinoptions=
+setlocal cinwords=if,else,while,do,for,switch
+setlocal colorcolumn=
+setlocal comments=:#
+setlocal commentstring=#\ %s
+setlocal complete=.,w,b,u,t,i
+setlocal concealcursor=
+setlocal conceallevel=0
+setlocal completefunc=
+setlocal nocopyindent
+setlocal cryptmethod=
+setlocal nocursorbind
+setlocal nocursorcolumn
+setlocal nocursorline
+setlocal define=
+setlocal dictionary=
+setlocal nodiff
+setlocal equalprg=
+setlocal errorformat=
+setlocal expandtab
+if &filetype != 'ruby'
+setlocal filetype=ruby
+endif
+setlocal foldcolumn=0
+setlocal foldenable
+setlocal foldexpr=0
+setlocal foldignore=#
+setlocal foldlevel=0
+setlocal foldmarker={{{,}}}
+setlocal foldmethod=manual
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldtext=foldtext()
+setlocal formatexpr=
+setlocal formatoptions=croql
+setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
+setlocal grepprg=
+setlocal iminsert=2
+setlocal imsearch=2
+setlocal include=^\\s*\\<\\(load\\>\\|require\\>\\|autoload\\s*:\\=[\"']\\=\\h\\w*[\"']\\=,\\)
+setlocal includeexpr=substitute(substitute(v:fname,'::','/','g'),'$','.rb','')
+setlocal indentexpr=GetRubyIndent(v:lnum)
+setlocal indentkeys=0{,0},0),0],!^F,o,O,e,=end,=else,=elsif,=when,=ensure,=rescue,==begin,==end
+setlocal noinfercase
+setlocal iskeyword=@,48-57,_,192-255
+setlocal keywordprg=ri\ -T\ -f\ bs
+setlocal nolinebreak
+setlocal nolisp
+setlocal nolist
+setlocal nomacmeta
+setlocal makeprg=
+setlocal matchpairs=(:),{:},[:]
+setlocal modeline
+setlocal modifiable
+setlocal nrformats=octal,hex
+setlocal nonumber
+setlocal numberwidth=4
+setlocal omnifunc=rubycomplete#Complete
+setlocal path=/Library/Ruby/Site/2.0.0,/Library/Ruby/Site/2.0.0/x86_64-darwin14,/Library/Ruby/Site/2.0.0/universal-darwin14,/Library/Ruby/Site,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/x86_64-darwin14,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/universal-darwin14,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/x86_64-darwin14,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/universal-darwin14
+setlocal nopreserveindent
+setlocal nopreviewwindow
+setlocal quoteescape=\\
+setlocal noreadonly
+setlocal norelativenumber
+setlocal norightleft
+setlocal rightleftcmd=search
+setlocal noscrollbind
+setlocal shiftwidth=2
+setlocal noshortname
+setlocal nosmartindent
+setlocal softtabstop=2
+setlocal nospell
+setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
+setlocal spellfile=
+setlocal spelllang=en
+setlocal statusline=
+setlocal suffixesadd=.rb
+setlocal swapfile
+setlocal synmaxcol=3000
+if &syntax != 'ruby'
+setlocal syntax=ruby
+endif
+setlocal tabstop=2
+setlocal tags=/osi/common/vob/tags,./tags,/Library/Ruby/Site/2.0.0/tags,/Library/Ruby/Site/2.0.0/x86_64-darwin14/tags,/Library/Ruby/Site/2.0.0/universal-darwin14/tags,/Library/Ruby/Site/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/x86_64-darwin14/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/2.0.0/universal-darwin14/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/vendor_ruby/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/x86_64-darwin14/tags,/System/Library/Frameworks/Ruby.framework/Versions/2.0/usr/lib/ruby/2.0.0/universal-darwin14/tags
+setlocal textwidth=0
+setlocal thesaurus=
+setlocal noundofile
+setlocal nowinfixheight
+setlocal nowinfixwidth
+setlocal wrap
+setlocal wrapmargin=0
+silent! normal! zE
+let s:l = 43 - ((38 * winheight(0) + 22) / 45)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+43
+normal! 0
 wincmd w
 argglobal
 edit lib
 let s:cpo_save=&cpo
 set cpo&vim
-imap <buffer> <S-LeftMouse> <Plug>ISLeftmouse
-imap <buffer> <MiddleMouse> <Plug>IMiddlemouse
-imap <buffer> <LeftMouse> <Plug>ILeftmouse
-inoremap <buffer> <silent> <S-Up> :Pexplore
 inoremap <buffer> <silent> <S-Down> :Nexplore
+inoremap <buffer> <silent> <S-Up> :Pexplore
+imap <buffer> <LeftMouse> <Plug>ILeftmouse
+imap <buffer> <MiddleMouse> <Plug>IMiddlemouse
+imap <buffer> <S-LeftMouse> <Plug>ISLeftmouse
 nmap <buffer>  <Plug>NetrwHideEdit
 nmap <buffer>  <Plug>NetrwRefresh
 nnoremap <buffer> <silent> C :let g:netrw_chgwin= winnr()
 nnoremap <buffer> <silent> c :exe "keepjumps lcd ".fnameescape(b:netrw_curdir)
-nnoremap <buffer> <F1> :he netrw-quickhelp
-nmap <buffer> <silent> <Plug>Netrw2Leftmouse -
-nmap <buffer> <2-LeftMouse> <Plug>Netrw2Leftmouse
-nmap <buffer> <S-LeftMouse> <Plug>NetrwSLeftmouse
-nmap <buffer> <MiddleMouse> <Plug>NetrwMiddlemouse
-nmap <buffer> <S-RightDrag> <Plug>NetrwRightdrag
-nmap <buffer> <LeftMouse> <Plug>NetrwLeftmouse
-nnoremap <buffer> <silent> <S-Up> :Pexplore
 nnoremap <buffer> <silent> <S-Down> :Nexplore
+nnoremap <buffer> <silent> <S-Up> :Pexplore
+nmap <buffer> <LeftMouse> <Plug>NetrwLeftmouse
+nmap <buffer> <S-RightDrag> <Plug>NetrwRightdrag
+nmap <buffer> <MiddleMouse> <Plug>NetrwMiddlemouse
+nmap <buffer> <S-LeftMouse> <Plug>NetrwSLeftmouse
+nmap <buffer> <2-LeftMouse> <Plug>Netrw2Leftmouse
+nmap <buffer> <silent> <Plug>Netrw2Leftmouse -
+nnoremap <buffer> <F1> :he netrw-quickhelp
 imap <buffer>  <Plug>NetrwHideEdit
 imap <buffer>  <Plug>NetrwRefresh
 inoremap <buffer> <silent> C :let g:netrw_chgwin= winnr()
@@ -1233,11 +1233,11 @@ setlocal nowinfixwidth
 setlocal nowrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 11 - ((10 * winheight(0) + 22) / 45)
+let s:l = 1 - ((0 * winheight(0) + 22) / 45)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-11
+1
 normal! 0
 lcd ~/Projects/lib/quick_file/lib
 wincmd w

@@ -72,6 +72,18 @@ module QuickFile
 				field :prf, as: :profile, type: Hash, default: {}
         field :mh, as: :md5_hash, type: String
 			end
+
+      def upload(opts)
+        upload = self.new
+        upload.source = opts
+        upload.store!
+        if upload.state?(:stored)
+          return {success: true, data: upload}
+        else
+          return {success: false, data: upload, error: self.error_log[0]}
+        end
+      end
+
 		end
 
 		## ACCESSORS
@@ -205,15 +217,16 @@ module QuickFile
       end
       if opts.is_a?(Hash)
         opts = opts.symbolize_keys
-        if opts[:type] == 'file'
+        type = opts[:type].to_s
+        if type == 'file'
           self.uploaded_file=(opts[:data])
-        elsif opts[:type] == 'url'
+        elsif type == 'url'
           self.linked_file=(opts[:data])
-        elsif opts[:type] == 'local'
+        elsif type == 'local'
           self.local_file=(opts[:data])
-        elsif opts[:type] == 'string'
+        elsif type == 'string'
           self.load_from_string(opts)
-        elsif opts[:type] == 'base64'
+        elsif type == 'base64'
           self.load_from_base64(opts)
         else
           raise "Unknown source type."
@@ -311,7 +324,7 @@ module QuickFile
 			cache! if state? :loaded
 			return unless state? :cached
 			self.state! :processing
-			self.save
+			self.save_if_persisted
 			begin
 				#puts "#{processes.size} processes"
 				processes.each do |style_name, opts|
@@ -325,7 +338,7 @@ module QuickFile
 				self.state! :error
 			end
 
-			self.save
+			self.save_if_persisted
 		end
 
 		def store!
@@ -347,7 +360,7 @@ module QuickFile
 					self.state! :error
 				end
 			end
-			save
+			self.save_if_persisted
 		end
 
 		def reprocess!(style_names)
@@ -375,12 +388,20 @@ module QuickFile
 			File.delete(self.styles["original"]["cache"])
 			self.styles["original"].delete("cache")
 
-			self.save
+			self.save_if_persisted
 		end
 
 		def validate!
 			# implement in base class to perform validations
 		end
+
+    def save_if_persisted
+      if self.new_record?
+        return true
+      else
+        return self.save
+      end
+    end
 
 		def process_style!(style_name)
 			style_name = style_name.to_s
@@ -414,7 +435,7 @@ module QuickFile
 			styles[style_name]["stg"] = storage.name
 			styles[style_name].delete("cache")
 			File.delete(fn)
-			save
+			self.save_if_persisted
 		end
 
 		def delete_style!(style_name)
@@ -435,7 +456,7 @@ module QuickFile
 			return if np == fn
 			obj = self.storage(style_name).rename(fn, np)
 			styles[style_name]["path"] = np
-			self.save
+			self.save_if_persisted
 		end
 
 		def update_style_paths!
@@ -457,7 +478,7 @@ module QuickFile
 				self.delete_style!(k)
 			end
 			self.state = STATES[:deleted]
-			save
+			self.save_if_persisted
 		end
 
 
