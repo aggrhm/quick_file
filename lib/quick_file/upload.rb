@@ -208,6 +208,10 @@ module QuickFile
 			ret
 		end
 
+    def processing_stats
+      @processing_stats ||= {}
+    end
+
 
 		## INITIALIZATION
 
@@ -284,6 +288,7 @@ module QuickFile
 
 		def cache!
 			return unless state? :loaded
+      add_stat(:original, :cache_start)
 			if @uploaded_file
 				cp = QuickFile.save_cache_file(QuickFile.generate_cache_name(extension), @uploaded_file)
 			elsif @linked_url
@@ -296,11 +301,15 @@ module QuickFile
       elsif @binary_data
         cp = QuickFile.write_to_cache_file(QuickFile.generate_cache_name(extension), @binary_data, 'wb')
 			end
+
+      sz = File.size(cp)
 			self.styles["original"] = {
 				"cache" => cp, 
 				"ct" => QuickFile.content_type_for(cp),
-				"sz" => File.size(cp)
+				"sz" => sz
 			}
+      add_stat(:original, "cached_file_size", sz)
+      add_stat(:original, "cached_file_name", self.original_filename)
 			# set file category
 			self.cat = QuickFile.file_category_for(cp)
       # set md5
@@ -316,6 +325,7 @@ module QuickFile
 				self.state! :error
 				File.delete(cp)
 			else
+        add_stat(:original, :cache_end)
 				self.state! :cached
 			end
 		end
@@ -325,6 +335,7 @@ module QuickFile
 			return unless state? :cached
 			self.state! :processing
 			self.save_if_persisted
+      add_stat(:original, "all_process_start")
 			begin
 				#puts "#{processes.size} processes"
 				processes.each do |style_name, opts|
@@ -337,7 +348,7 @@ module QuickFile
 				self.error_log << "PROCESS: #{e.message}"
 				self.state! :error
 			end
-
+      add_stat(:original, "all_process_end")
 			self.save_if_persisted
 		end
 
@@ -345,6 +356,7 @@ module QuickFile
 			cache! if state? :loaded
 			process! if state? :cached
 			return unless state?(:processed)
+      add_stat(:original, "all_store_start")
 			begin
 				self.styles.keys.each do |style_name|
 					store_style! style_name unless styles[style_name]["cache"].nil?
@@ -360,6 +372,8 @@ module QuickFile
 					self.state! :error
 				end
 			end
+      add_stat(:original, "all_store_end")
+      self.after_storing
 			self.save_if_persisted
 		end
 
@@ -404,22 +418,27 @@ module QuickFile
     end
 
 		def process_style!(style_name)
+      add_stat(style_name, :process_start)
 			style_name = style_name.to_s
 			#puts "Processing #{style_name}..."
 			opts = processes[style_name]
 			fn = opts[:blk].call(styles["original"]["cache"])
+      sz = styles["original"]["sz"]
 			unless fn.nil?
 				if (styles.key?(style_name) && !styles[style_name]["cache"].nil?)
 					File.delete(styles[style_name]["cache"])
 				end
+        sz = File.size(fn)
 				styles[style_name.to_s] = {"cache" => fn, 
 																	 "ct" => QuickFile.content_type_for(fn),
-																	 "sz" => File.size(fn)}
+																	 "sz" => sz}
 			end
-
+      add_stat(style_name, :process_end)
+      add_stat(style_name, :processed_file_size, sz)
 		end
 
 		def store_style!(style_name)
+      add_stat(style_name, :store_start)
 			style_name = style_name.to_s
 			fn = styles[style_name]["cache"]
 			sp = storage_path(style_name, File.extname(fn))
@@ -434,6 +453,12 @@ module QuickFile
 			styles[style_name]["sz"] = File.size(fn)
 			styles[style_name]["stg"] = storage.name
 			styles[style_name].delete("cache")
+
+      add_stat(style_name, :store_end)
+      stats = processing_stats[style_name]
+      kbps = (stats["processed_file_size"] / (stats["store_end"].to_f - stats["store_start"].to_f)) / 1024.0
+      add_stat(style_name, :store_kbps, kbps.round(2))
+
 			File.delete(fn)
 			self.save_if_persisted
 		end
@@ -481,6 +506,15 @@ module QuickFile
 			self.save_if_persisted
 		end
 
+    def after_storing
+
+    end
+
+    def add_stat(style, name, val = Time.now)
+      st = style.to_s
+      self.processing_stats[st] ||= {}
+      self.processing_stats[st][name.to_s] = val
+    end
 
 		
 	end
