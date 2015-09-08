@@ -84,6 +84,16 @@ module QuickFile
         end
       end
 
+      def cache(opts)
+        upload = self.new
+        upload.source = opts
+        if upload.state?(:cached)
+          return {success: true, data: upload}
+        else
+          return {success: false, data: upload, error: self.error_log[0]}
+        end
+      end
+
 		end
 
 		## ACCESSORS
@@ -121,10 +131,12 @@ module QuickFile
 		end
 
 		def path(style_name=:original)
+      return nil if styles[style_name.to_s].nil?
 			styles[style_name.to_s]["path"]
 		end
 
 		def cache_path(style_name=:original)
+      return nil if styles[style_name.to_s].nil?
 			styles[style_name.to_s]["cache"]
 		end
 
@@ -133,8 +145,13 @@ module QuickFile
 		end
 
 		def url(style_name=:original, opts={:secure=>true})
-			return default_url(style_name) unless (styles[style_name.to_s] && styles[style_name.to_s]["path"])
-			"#{self.storage(style_name).options[:portal_url]}#{styles[style_name.to_s]["path"]}"
+      if p = path(style_name)
+        return "#{self.storage(style_name).options[:portal_url]}#{p}"
+      elsif (p = cache_path(style_name)) && (purl = QuickFile.storage_for(:cache).options[:portal_url])
+        return "#{purl}#{File.basename(p)}"
+      else
+        return default_url(style_name)
+      end
 		end
 
 		def value(style_name)
@@ -289,18 +306,21 @@ module QuickFile
 		def cache!
 			return unless state? :loaded
       add_stat(:original, :cache_start)
+      cn = QuickFile.generate_cache_name(extension)
 			if @uploaded_file
-				cp = QuickFile.save_cache_file(QuickFile.generate_cache_name(extension), @uploaded_file)
+				cp = QuickFile.save_cache_file(cn, @uploaded_file)
 			elsif @linked_url
 				# download file to 
-				cp = QuickFile.download_cache_file(QuickFile.generate_cache_name(extension), @linked_url)
+				cp = QuickFile.download_cache_file(cn, @linked_url)
 			elsif @local_file
-				cp = QuickFile.copy_cache_file(QuickFile.generate_cache_name(extension), @local_file)
+				cp = QuickFile.copy_cache_file(cn, @local_file)
 			elsif @string_file
-				cp = QuickFile.write_to_cache_file(QuickFile.generate_cache_name(extension), @string_file)
+				cp = QuickFile.write_to_cache_file(cn, @string_file)
       elsif @binary_data
-        cp = QuickFile.write_to_cache_file(QuickFile.generate_cache_name(extension), @binary_data, 'wb')
+        cp = QuickFile.write_to_cache_file(cn, @binary_data, 'wb')
 			end
+
+      cp = before_cache(cp)
 
       sz = File.size(cp)
 			self.styles["original"] = {
@@ -373,7 +393,7 @@ module QuickFile
 				end
 			end
       add_stat(:original, "all_store_end")
-      self.after_storing
+      self.after_store
 			self.save_if_persisted
 		end
 
@@ -441,6 +461,7 @@ module QuickFile
       add_stat(style_name, :store_start)
 			style_name = style_name.to_s
 			fn = styles[style_name]["cache"]
+      sz = styles[style_name]["sz"]
 			sp = storage_path(style_name, File.extname(fn))
 			storage = QuickFile.storage_for(:primary)
 			storage.store({
@@ -456,7 +477,7 @@ module QuickFile
 
       add_stat(style_name, :store_end)
       stats = processing_stats[style_name]
-      kbps = (stats["processed_file_size"] / (stats["store_end"].to_f - stats["store_start"].to_f)) / 1024.0
+      kbps = (sz / (stats["store_end"].to_f - stats["store_start"].to_f)) / 1024.0
       add_stat(style_name, :store_kbps, kbps.round(2))
 
 			File.delete(fn)
@@ -506,7 +527,10 @@ module QuickFile
 			self.save_if_persisted
 		end
 
-    def after_storing
+    def before_cache(cp)
+      return cp
+    end
+    def after_store
 
     end
 

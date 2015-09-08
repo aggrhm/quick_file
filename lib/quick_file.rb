@@ -100,6 +100,7 @@ module QuickFile
         options[:connections].each do |conn|
           ret[conn[:name]] = QuickFile::Storage.build_for_connection(conn)
         end
+        ret[:cache] = ret["cache"] = QuickFile::Storage.build_for_connection({provider: :local, local_root: "/tmp", directory: "uploads"}.merge(options[:cache]))
         ret
       end
     end
@@ -183,7 +184,9 @@ module QuickFile
 		end
 
     def cache_path(cn)
-      File.join(CACHE_DIR, cn)
+      cp = File.join(options[:cache][:local_root], options[:cache][:directory], cn)
+      FileUtils.mkdir_p File.dirname(cp)
+      return cp
     end
 
     def download(url, to)
@@ -202,28 +205,24 @@ module QuickFile
     end
 
     def save_cache_file(cn, file)
-      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
       cp = QuickFile.cache_path(cn)
       File.open(cp, "wb") { |f| f.write(file.read) }
       return cp
     end
 
     def copy_cache_file(cn, fn)
-      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
       cp = QuickFile.cache_path(cn)
       FileUtils.copy(fn, cp)
       return cp
     end
 
     def download_cache_file(cn, url)
-      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
       cp = QuickFile.cache_path(cn)
       QuickFile.download(url, cp)
       return cp
     end
 
     def write_to_cache_file(cn, str, wf="w")
-      Dir.mkdir QuickFile::CACHE_DIR unless File.directory?(QuickFile::CACHE_DIR)
       cp = QuickFile.cache_path(cn)
       File.open(cp, wf) { |f| f.write(str) }
       return cp

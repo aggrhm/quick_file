@@ -47,6 +47,9 @@ module QuickFile
       def content_type
         QuickFile.content_type_for(@source)
       end
+      def etag
+        return ""
+      end
 
     end
 
