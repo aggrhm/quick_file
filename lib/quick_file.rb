@@ -1,6 +1,7 @@
 require "active_support/all"
 require "mime/types"
 require "rmagick"
+require "find"
 require "quick_file/version"
 require "quick_file/storage"
 require "quick_file/storage/s3_storage"
@@ -20,6 +21,10 @@ module QuickFile
         QuickFile.logger = Rails.logger
         config_file = Rails.root.join("config", "quick_file.yml")
         QuickFile.configure(YAML.load_file(config_file)[Rails.env]) unless config_file.nil?
+        # clean cache dir if development
+        if Rails.env.to_sym == :development
+          QuickFile.clean_cache_directory
+        end
       end
     end
   end
@@ -183,9 +188,14 @@ module QuickFile
 			new_file
 		end
 
-    def cache_path(cn)
-      cp = File.join(options[:cache][:local_root], options[:cache][:directory], cn)
-      FileUtils.mkdir_p File.dirname(cp)
+    def cache_directory
+      cp = File.join(options[:cache][:local_root], options[:cache][:directory])
+      FileUtils.mkdir_p(cp) if !File.directory?(cp)
+      return cp
+    end
+
+    def cache_path(cn=nil)
+      cp = File.join(cache_directory, cn)
       return cp
     end
 
@@ -228,8 +238,19 @@ module QuickFile
       return cp
     end
 
-
-
+    def clean_cache_directory(opts={})
+      #opts[:max_age] ||= 3600*24
+      opts[:max_age] ||= 10
+      QuickFile.log "Cleaning cache directory..."
+      # delete any files older than a day
+      Find.find(cache_directory) do |file|
+        if File.file?(file) && (Time.now - File.stat(file).mtime) > opts[:max_age]
+          QuickFile.log "Deleting cached file #{file}."
+          File.delete(file)
+        end
+      end
+      QuickFile.log "Cache cleaning done."
+    end
 
   end
 

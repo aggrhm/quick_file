@@ -480,7 +480,8 @@ module QuickFile
       kbps = (sz / (stats["store_end"].to_f - stats["store_start"].to_f)) / 1024.0
       add_stat(style_name, :store_kbps, kbps.round(2))
 
-			File.delete(fn)
+      # NOTE: Let cache take care of deletion so user can access file temporarily
+			#File.delete(fn)
 			self.save_if_persisted
 		end
 
