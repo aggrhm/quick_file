@@ -129,6 +129,9 @@ module QuickFile
 		def storage(style_name=:original)
 			QuickFile.storage_for(self.storage_name(style_name))
 		end
+    def storage_object(style_name=:original)
+      self.storage.get(self.path(style_name))
+    end
 
 		def path(style_name=:original)
       return nil if styles[style_name.to_s].nil?
@@ -442,7 +445,7 @@ module QuickFile
 			style_name = style_name.to_s
 			#puts "Processing #{style_name}..."
 			opts = processes[style_name]
-			fn = opts[:blk].call(styles["original"]["cache"])
+			fn = opts[:blk].call(styles["original"]["cache"], self)
       sz = styles["original"]["sz"]
 			unless fn.nil?
 				if (styles.key?(style_name) && !styles[style_name]["cache"].nil?)

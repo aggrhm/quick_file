@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
 
 	s.add_dependency 'rmagick'
 	s.add_dependency 'mime-types'
-	s.add_dependency 'aws-sdk', '1.59'
+	s.add_dependency 'aws-sdk', '2.2.5'
   s.add_dependency 'stacktor', '1.1.2'
   s.add_dependency 'activesupport'
 
