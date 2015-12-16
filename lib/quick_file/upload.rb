@@ -80,7 +80,7 @@ module QuickFile
         if upload.state?(:stored)
           return {success: true, data: upload}
         else
-          return {success: false, data: upload, error: self.error_log[0]}
+          return {success: false, data: upload, error: upload.error_log[0]}
         end
       end
 
@@ -90,7 +90,7 @@ module QuickFile
         if upload.state?(:cached)
           return {success: true, data: upload}
         else
-          return {success: false, data: upload, error: self.error_log[0]}
+          return {success: false, data: upload, error: upload.error_log[0]}
         end
       end
 
