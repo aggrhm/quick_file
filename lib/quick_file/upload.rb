@@ -445,7 +445,7 @@ module QuickFile
 			style_name = style_name.to_s
 			#puts "Processing #{style_name}..."
 			opts = processes[style_name]
-			fn = opts[:blk].call(styles["original"]["cache"], self)
+			fn = opts[:blk].call(self, styles["original"]["cache"])
       sz = styles["original"]["sz"]
 			unless fn.nil?
 				if (styles.key?(style_name) && !styles[style_name]["cache"].nil?)
