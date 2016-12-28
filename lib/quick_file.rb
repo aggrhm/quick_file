@@ -120,6 +120,17 @@ module QuickFile
       end
     end
 
+    def orm_for_model(model)
+      mods = model.included_modules
+      if defined?(ActiveRecord) && model < ActiveRecord::Base
+        return :active_record
+      elsif defined?(Mongoid) && mods.include?(Mongoid::Document)
+        return :mongoid
+      elsif defined?(QuickScript) && mods.include?(QuickScript::HashModel)
+        return :hash_model
+      end
+    end
+
     def resize_to_fit(file, x, y)
       img = Magick::Image.read(file).first
       nim = img.resize_to_fit x, y

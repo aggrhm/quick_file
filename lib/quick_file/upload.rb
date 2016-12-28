@@ -41,27 +41,8 @@ module QuickFile
         helpers[helper_name] = args
       end
 
-      def quick_file_mongomapper_keys!
-        key :sta, Integer    # state
-        key :orf, String    # original filename
-        key :sty, Hash      # styles
-        key :oty, String    # owner type
-        key :oid, ObjectId  # owner id
-        key :err, Array     # errors
-        key :cat, Integer   # file category
-        key :prf, Hash      # profile
-        key :mh, String     # md5_hash
-
-        attr_alias :state, :sta
-        attr_alias :original_filename, :orf
-        attr_alias :styles, :sty
-        attr_alias :error_log, :err
-        attr_alias :owner_type, :oty
-        attr_alias :profile, :prf
-        attr_alias :md5_hash, :mh
-      end
-
       def quick_file_mongoid_keys!
+        @orm = :mongoid
         field :sta, as: :state, type: Integer    # state
         field :orf, as: :original_filename, type: String    # original filename
         field :sty, as: :styles, type: Hash, default: {}      # styles
@@ -73,7 +54,28 @@ module QuickFile
         field :mh, as: :md5_hash, type: String
       end
 
-      def upload(src, opts={})
+      def quick_file_upload_hash_model_fields!
+        @orm = :hash_model
+        field :state, type: Integer    # state
+        field :original_filename, type: String    # original filename
+        field :styles, type: Hash, default: {}      # styles
+        field :error_log, type: Array     # errors
+        field :file_category, type: Integer
+        field :profile, type: Hash, default: {}
+        field :md5_hash, type: String
+        field :style_type, type: Integer
+      end
+
+      def quick_file_upload!(opts={})
+        orm = QuickFile.orm_for_model(self)
+        if orm == :mongoid
+          quick_file_mongoid_keys!
+        elsif orm == :hash_model
+          quick_file_upload_hash_model_fields!
+        end
+      end
+
+      def store_source(src, opts={})
         upload = self.new
         upload.owner = opts[:owner] if opts[:owner]
         upload.source = src
@@ -85,7 +87,7 @@ module QuickFile
         end
       end
 
-      def cache(src, opts={})
+      def cache_source(src, opts={})
         upload = self.new
         upload.owner = opts[:owner] if opts[:owner]
         upload.source = src
@@ -94,6 +96,14 @@ module QuickFile
         else
           return {success: false, data: upload, error: upload.error_log[0] || "An error occurred processing the upload."}
         end
+      end
+
+      def style_types
+        @style_types ||= {}
+      end
+
+      def style_type(key, val)
+        style_types[key] = val
       end
 
     end
@@ -119,6 +129,14 @@ module QuickFile
 
     def state!(val)
       self.state = STATES[val.to_sym]
+    end
+
+    def style_type?(val)
+      self.style_type == self.class.style_types[val.to_sym]
+    end
+
+    def style_type!(val)
+      self.style_type = self.class.style_types[val.to_sym]
     end
 
     def sanitized_basename
@@ -215,22 +233,6 @@ module QuickFile
     def storage_path(style_name, ext)
       # override in base class
       "#{style_name.to_s}/#{self.sanitized_basename}#{ext}"
-    end
-
-    def file_category
-      return self.cat unless self.cat.nil?
-
-      return FILE_CATEGORIES[:none] if self.state.nil?
-
-      if self.is_image?
-        return FILE_CATEGORIES[:image]
-      elsif self.is_video?
-        return FILE_CATEGORIES[:video]
-      elsif self.is_audio?
-        return FILE_CATEGORIES[:audio]
-      else
-        return FILE_CATEGORIES[:file]
-      end
     end
 
     def url_hash
@@ -347,7 +349,7 @@ module QuickFile
       add_stat(:original, "cached_file_size", sz)
       add_stat(:original, "cached_file_name", self.original_filename)
       # set file category
-      self.cat = QuickFile.file_category_for(cp)
+      self.file_category = QuickFile.file_category_for(cp)
       # set md5
       self.md5_hash = Digest::MD5.file(cp).hexdigest
 
