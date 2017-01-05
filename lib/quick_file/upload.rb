@@ -78,6 +78,7 @@ module QuickFile
       def store_source(src, opts={})
         upload = self.new
         upload.owner = opts[:owner] if opts[:owner]
+        upload.style_type = opts[:style_type] if opts[:style_type]
         upload.source = src
         upload.store!
         if upload.state?(:stored)
@@ -90,6 +91,7 @@ module QuickFile
       def cache_source(src, opts={})
         upload = self.new
         upload.owner = opts[:owner] if opts[:owner]
+        upload.style_type = opts[:style_type] if opts[:style_type]
         upload.source = src
         if upload.state?(:cached)
           return {success: true, data: upload}
@@ -158,7 +160,7 @@ module QuickFile
       QuickFile.storage_for(self.storage_name(style_name))
     end
     def storage_object(style_name=:original)
-      self.storage.get(self.path(style_name))
+      self.storage.get(self.path(style_name) || self.cache_path(style_name))
     end
 
     def path(style_name=:original)
@@ -263,7 +265,7 @@ module QuickFile
           self.linked_file=(opts[:data])
         elsif type == 'local'
           self.local_file=(opts[:data])
-        elsif type == 'string'
+        elsif type == 'string' || type == 'text'
           self.load_from_string(opts)
         elsif type == 'base64'
           self.load_from_base64(opts)
@@ -304,7 +306,7 @@ module QuickFile
       name = opts[:filename]
       self.error_log = []
       @string_file = str
-      self.original_filename = name
+      self.original_filename = name || "upload.txt"
       self.state! :loaded
       cache!
     end
@@ -344,7 +346,8 @@ module QuickFile
       self.styles["original"] = {
         "cache" => cp, 
         "ct" => QuickFile.content_type_for(cp),
-        "sz" => sz
+        "sz" => sz,
+        "stg" => "cache"
       }
       add_stat(:original, "cached_file_size", sz)
       add_stat(:original, "cached_file_name", self.original_filename)
@@ -469,7 +472,8 @@ module QuickFile
         sz = File.size(fn)
         styles[style_name.to_s] = {"cache" => fn, 
                                    "ct" => QuickFile.content_type_for(fn),
-                                   "sz" => sz}
+                                   "sz" => sz,
+                                   "stg" => "cache"}
       end
       add_stat(style_name, :process_end)
       add_stat(style_name, :processed_file_size, sz)
