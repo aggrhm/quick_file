@@ -6,9 +6,19 @@ module QuickFile
 
     class SwiftStorage < StorageBase
 
+      attr_accessor :auth_client, :swift_client, :container_name
+
       def initialize(opts)
         super(opts)
-        @auth_client = Stacktor::Identity::V2::Client.new(url: opts[:auth_url])
+        ident_url = opts[:auth_url]
+        if ident_url.include?("/v3")
+          ident_client_class = Stacktor::Identity::V3::Client
+        elsif ident_url.include?("/v2")
+          ident_client_class = Stacktor::Identity::V2::Client
+        else
+          raise "Cannot determine proper client for url"
+        end
+        @auth_client = ident_client_class.new(url: opts[:auth_url])
 
         @swift_client = Stacktor::Swift::V1::Client.new
         @swift_client.before_request do |req_opts, client|
@@ -31,7 +41,7 @@ module QuickFile
           @swift_client.url = token.endpoint_url_for_service_type('object-store', :public)
           return true
         else
-          raise "Could not authenticate with OpenStack"
+          raise "Could not authenticate with OpenStack: #{resp.inspect}"
         end
       end
 

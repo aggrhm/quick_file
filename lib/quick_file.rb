@@ -58,7 +58,7 @@ module QuickFile
     end
 
     def generate_cache_name(ext)
-      "#{SecureRandom.hex(5)}#{ext}"
+      "#{SecureRandom.hex(8)}#{ext}"
     end
 
     def new_cache_file(ext)
@@ -249,6 +249,11 @@ module QuickFile
       return cp
     end
 
+    ##
+    # NOTE: Eventually use this command:
+    #
+    # > find /mydirectory -mmin +5 -exec rm -f {} \;
+    #
     def clean_cache_directory(opts={})
       #opts[:max_age] ||= 3600*24
       opts[:max_age] ||= 10

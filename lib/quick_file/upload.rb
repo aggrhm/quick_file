@@ -49,7 +49,7 @@ module QuickFile
         field :oty, as: :owner_type, type: String    # owner type
         field :oid, as: :owner_id  # owner id
         field :err, as: :error_log, type: Array     # errors
-        field :cat, type: Integer
+        field :cat, as: :file_category, type: Integer
         field :prf, as: :profile, type: Hash, default: {}
         field :mh, as: :md5_hash, type: String
       end
