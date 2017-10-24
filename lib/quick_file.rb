@@ -20,7 +20,8 @@ module QuickFile
       initializer "quick_file.configure" do
         QuickFile.logger = Rails.logger
         config_file = Rails.root.join("config", "quick_file.yml")
-        QuickFile.configure(YAML.load_file(config_file)[Rails.env]) unless config_file.nil?
+        template = ERB.new(File.new(config_file).read).result(binding)
+        QuickFile.configure(YAML.load(template)[Rails.env]) unless config_file.nil?
         # clean cache dir if development
         if Rails.env.to_sym == :development
           QuickFile.clean_cache_directory
