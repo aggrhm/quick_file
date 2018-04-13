@@ -327,8 +327,10 @@ module QuickFile
       return unless state? :loaded
       add_stat(:original, :cache_start)
       cn = QuickFile.generate_cache_name(extension)
+      ct = nil
       if @uploaded_file
         cp = QuickFile.save_cache_file(cn, @uploaded_file)
+        ct = @uploaded_file.content_type if @uploaded_file.respond_to?(:content_type)
       elsif @linked_url
         # download file to 
         cp = QuickFile.download_cache_file(cn, @linked_url)
@@ -345,7 +347,7 @@ module QuickFile
       sz = File.size(cp)
       self.styles["original"] = {
         "cache" => cp, 
-        "ct" => QuickFile.content_type_for(cp),
+        "ct" => ct || QuickFile.content_type_for(cp),
         "sz" => sz,
         "stg" => "cache"
       }
