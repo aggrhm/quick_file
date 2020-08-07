@@ -50,7 +50,7 @@ module QuickFile
       end
 
       def store(opts)
-        resp = @swift_client.create_object(container_name: @container_name, object_name: opts[:key], content: opts[:body], content_type: opts[:content_type])
+        resp = @swift_client.create_object(container_name: @container_name, object_name: opts[:key], content: opts[:body], content_type: opts[:content_type], headers: opts[:headers])
         raise resp[:body] if resp[:success] != true
         return resp
       end

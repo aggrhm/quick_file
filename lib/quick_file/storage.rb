@@ -60,6 +60,10 @@ module QuickFile
         self.get(key).value
       end
 
+      def portal_url_for_key(key)
+        self.options[:portal_url] + key
+      end
+
     end
 
 
