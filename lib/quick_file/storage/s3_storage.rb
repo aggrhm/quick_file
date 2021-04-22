@@ -15,7 +15,7 @@ module QuickFile
         }
         @interface = Aws::S3::Resource.new(conn_opts)
 
-        self.set_bucket(@options[:directory])
+        self.set_bucket(@options[:bucket] || @options[:directory])
       end
 
       def set_bucket(bucket_name)
@@ -31,7 +31,7 @@ module QuickFile
       def store(opts)
         write_opts = {}
         write_opts[:body] = opts[:body]
-        write_opts[:acl] = 'public-read' if @options[:public] == true
+        write_opts[:acl] = 'public-read' if (@options[:public] == true || opts[:public] == true)
         write_opts[:content_type] = opts[:content_type] if opts[:content_type]
         @bucket.object(opts[:key]).put(write_opts)
       end

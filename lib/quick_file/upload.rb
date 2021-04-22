@@ -237,6 +237,11 @@ module QuickFile
       "#{style_name.to_s}/#{self.sanitized_basename}#{ext}"
     end
 
+    def store_options(style_name)
+      # override if necesssary
+      {}
+    end
+
     def url_hash
       ret = {}
       styles.keys.each do |style_name|
@@ -487,12 +492,13 @@ module QuickFile
       fn = styles[style_name]["cache"]
       sz = styles[style_name]["sz"]
       sp = storage_path(style_name, File.extname(fn))
+      bso = store_options(style_name)
       storage = QuickFile.storage_for(:primary)
-      storage.store({
+      storage.store(bso.merge({
         :body => File.open(fn).read,
         :content_type => QuickFile.content_type_for(fn),
         :key => sp,
-      })
+      }))
       styles[style_name]["path"] = sp
       styles[style_name]["ct"] = QuickFile.content_type_for(fn)
       styles[style_name]["sz"] = File.size(fn)
