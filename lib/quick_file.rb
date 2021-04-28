@@ -106,7 +106,7 @@ module QuickFile
         options[:connections].each do |conn|
           stg = QuickFile::Storage.build_for_connection(conn)
           ret[conn[:name]] = stg
-          (conn[:aliases] || []).do |al|
+          (conn[:aliases] || []).each do |al|
             ret[al] = stg
           end
         end
