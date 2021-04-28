@@ -104,7 +104,11 @@ module QuickFile
       @@storage_map ||= begin
         ret = {}
         options[:connections].each do |conn|
-          ret[conn[:name]] = QuickFile::Storage.build_for_connection(conn)
+          stg = QuickFile::Storage.build_for_connection(conn)
+          ret[conn[:name]] = stg
+          (conn[:aliases] || []).do |al|
+            ret[al] = stg
+          end
         end
         ret[:cache] = ret["cache"] = QuickFile::Storage.build_for_connection({provider: :local, local_root: "/tmp", directory: "uploads"}.merge(options[:cache]))
         ret
